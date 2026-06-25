@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "UniPortal",
+    "slug": "uniportal",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "uniportal",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "android": {
+      "package": "ai.gather.uniportal",
+      "permissions": [
+        "INTERNET",
+        "READ_MEDIA_IMAGES",
+        "READ_MEDIA_VIDEO",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "MANAGE_EXTERNAL_STORAGE",
+        "USE_BIOMETRIC",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      "expo-secure-store",
+      "expo-local-authentication",
+      "expo-notifications",
+      "expo-font"
+    ],
+    "extra": {
+      "comment": "Android-first, enterprise (sideloaded/MDM) distribution. MANAGE_EXTERNAL_STORAGE enables the true recursive Scan & Sort with Copy-default + 30-day trash. Not intended for Google Play."
+    }
+  }
+}

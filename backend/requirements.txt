@@ -1,0 +1,16 @@
+# Floors chosen for Python 3.14 wheel availability. Pin exact versions in a
+# lockfile for production; these ranges keep local dev unblocked on new Pythons.
+# Notes: psycopg3 (not psycopg2) and PyJWT (not python-jose) avoid source builds
+# that fail on 3.14; bcrypt is used directly (passlib 1.7.4 breaks on bcrypt 4.x).
+fastapi>=0.115.6
+uvicorn[standard]>=0.34.0
+sqlalchemy>=2.0.36
+alembic>=1.14.0
+psycopg[binary]>=3.2.0
+pydantic[email]>=2.11.0
+pydantic-settings>=2.7.0
+PyJWT>=2.10.0
+bcrypt>=4.1.0
+python-multipart>=0.0.20
+celery>=5.4.0
+redis>=5.0.0

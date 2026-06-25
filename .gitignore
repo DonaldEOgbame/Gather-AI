@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# JavaScript / React Native
+node_modules/
+mobile/node_modules/
+.expo/
+mobile/.expo/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+build/
+dist/
+android/app/build/
+mobile/android/app/build/
+*.apk
+*.aab
+
+# Env / secrets
+.env
+backend/.env
+
+# Local storage blobs
+backend/_storage/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
