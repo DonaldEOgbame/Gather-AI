@@ -61,6 +61,13 @@ export const useMyRegistration = (semesterId: string) =>
     enabled: !!semesterId,
   });
 
+export const useRegistrationOfferings = (semesterId: string) =>
+  useQuery<OfferingOut[]>({
+    queryKey: ["registration-offerings", semesterId],
+    queryFn: () => registrationApi.availableOfferings(semesterId),
+    enabled: !!semesterId,
+  });
+
 export const usePendingRegistrations = (semesterId: string) =>
   useQuery<StudentRegistrationOut[]>({
     queryKey: ["pending-registrations", semesterId],

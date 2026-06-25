@@ -33,6 +33,7 @@ from app.models import (
     Enrollment,
     EnrollmentStatus,
     GlobalRole,
+    OfferingStatus,
     OfferingLecturer,
     RegistrationItem,
     Semester,
@@ -42,6 +43,7 @@ from app.models import (
 )
 from app.notification_service import NotificationService
 from app.schemas import (
+    OfferingOut,
     RegistrationApprovalIn,
     RegistrationItemOut,
     RegistrationSubmitIn,
@@ -80,6 +82,58 @@ def _registration_out(reg: StudentRegistration) -> dict:
         "submitted_at": reg.submitted_at,
         "approved_at": reg.approved_at,
         "items": [{"id": ri.id, "offering_id": ri.offering_id} for ri in reg.registration_items],
+    }
+
+
+def _offering_out_for_registration(off: CourseOffering, db: Session, user: User) -> dict:
+    """Serialize offerings for the student registration picker.
+
+    This intentionally includes unenrolled current-semester offerings, unlike
+    GET /offerings, which remains scoped to already-enrolled student courses.
+    """
+    course = db.get(Course, off.course_id)
+    sem = db.get(Semester, off.semester_id)
+
+    enrollment_status = "unenrolled"
+    existing_enrollment = (
+        db.query(Enrollment)
+        .filter(Enrollment.offering_id == off.id, Enrollment.student_id == user.id)
+        .one_or_none()
+    )
+    if existing_enrollment:
+        enrollment_status = existing_enrollment.status.value
+    else:
+        pending_registration = (
+            db.query(StudentRegistration)
+            .join(RegistrationItem, RegistrationItem.registration_id == StudentRegistration.id)
+            .filter(
+                StudentRegistration.student_id == user.id,
+                StudentRegistration.semester_id == off.semester_id,
+                StudentRegistration.status == "advisor_pending",
+                RegistrationItem.offering_id == off.id,
+            )
+            .one_or_none()
+        )
+        if pending_registration:
+            enrollment_status = "advisor_pending"
+
+    return {
+        "id": off.id,
+        "course_id": off.course_id,
+        "semester_id": off.semester_id,
+        "status": off.status,
+        "enrollment_mode": off.enrollment_mode,
+        "sharing_ceiling": off.sharing_ceiling,
+        "watermark_mandatory": off.watermark_mandatory,
+        "code": course.code if course else None,
+        "title": course.title if course else None,
+        "credit_units": course.credit_units if course else None,
+        "department_id": course.department_id if course else None,
+        "session_name": sem.session.name if sem and sem.session else None,
+        "semester_term": sem.term if sem else None,
+        "enrollment_status": enrollment_status,
+        "is_lecturer": False,
+        "is_owner": False,
     }
 
 
@@ -216,6 +270,37 @@ def get_my_registration(
     if not reg:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "No registration found for this semester")
     return _registration_out(reg)
+
+
+# ---------------------------------------------------------------------------
+# C3: Student sees offerings available for course registration
+# ---------------------------------------------------------------------------
+
+@router.get("/available-offerings/{semester_id}", response_model=list[OfferingOut])
+def list_available_registration_offerings(
+    semester_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> list[dict]:
+    """Return active offerings in a semester that a student may choose from."""
+    if user.global_role != GlobalRole.student:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Students only")
+
+    sem = db.get(Semester, semester_id)
+    if not sem:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Semester not found")
+
+    offerings = (
+        db.query(CourseOffering)
+        .join(Course, CourseOffering.course_id == Course.id)
+        .filter(
+            CourseOffering.semester_id == semester_id,
+            CourseOffering.status != OfferingStatus.archived,
+        )
+        .order_by(Course.code)
+        .all()
+    )
+    return [_offering_out_for_registration(off, db, user) for off in offerings]
 
 
 # ---------------------------------------------------------------------------

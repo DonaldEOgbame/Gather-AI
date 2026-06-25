@@ -144,7 +144,15 @@ export default function CoursesTab() {
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: palette.bg }}>
       <View style={{ paddingHorizontal: 24, paddingTop: 6 }}>
-        <Txt variant="title">Courses</Txt>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Txt variant="title">Courses</Txt>
+          {isStudent && (
+            <View style={{ flexDirection: "row", gap: 14 }}>
+              <Txt onPress={() => nav.navigate("RegisterCourses")} style={{ fontSize: 13, ...font(700), color: palette.text }}>Register</Txt>
+              <Txt onPress={() => nav.navigate("PastSemesters")} style={{ fontSize: 13, ...font(700), color: palette.textFaint }}>Past</Txt>
+            </View>
+          )}
+        </View>
         <Txt variant="muted" style={{ fontSize: 14, marginTop: 2 }}>
           {isStudent ? `${enrolledCourses.length} enrolled` : `${filtered.length} assigned`}
         </Txt>

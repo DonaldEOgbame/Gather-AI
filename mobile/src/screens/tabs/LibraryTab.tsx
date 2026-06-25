@@ -126,6 +126,11 @@ export default function LibraryTab() {
           <Icon name="chev" size={20} color="rgba(255,255,255,0.7)" />
         </Pressable>
 
+        {/* Import files entry */}
+        <View style={{ marginTop: 12 }}>
+          <ListCard icon="download" accent="sky" title="Import files" subtitle="From Downloads, Drive or a share sheet" onPress={() => nav.navigate("ImportFiles")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+        </View>
+
         {/* Stat tiles */}
         {(result || hasContent) && (
           <View style={{ flexDirection: "row", gap: 10, marginTop: 16 }}>

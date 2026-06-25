@@ -6,6 +6,7 @@ export type AuthStackParams = {
   JoinCode: undefined;
   Otp: { email: string };
   Onboarding: undefined;
+  RequestAccess: undefined;
 };
 
 export type RootStackParams = {
@@ -60,6 +61,39 @@ export type RootStackParams = {
   SyncInfo: undefined;
   Collections: undefined;
   LiteMode: undefined;
+  // Batch 5 · workflow sheets + registration & semester transition (design 27,29,36,38,83-87,99)
+  ShareToGather: undefined;
+  SmartCluster: { folderId?: string; name?: string } | undefined;
+  ImportFiles: undefined;
+  FileActions: { title?: string; meta?: string } | undefined;
+  RegisterCourses: undefined;
+  AwaitingAdvisor: undefined;
+  AdvisorApproval: { code?: string } | undefined;
+  NewSemester: undefined;
+  Reorganizing: undefined;
+  OverTheCap: undefined;
+  // Batch 6 · session model (design 77-82)
+  Sessions: undefined;
+  CreateSession: undefined;
+  AddOffering: { offeringId?: string } | undefined;
+  Rollover: undefined;
+  TenantQueue: undefined;
+  // Batch 6 · safety, identity & ops (design 89-104, 106)
+  Takedown: { title?: string; meta?: string } | undefined;
+  PhotoConsent: undefined;
+  ReviewPhotos: undefined;
+  LogoutOptions: undefined;
+  PreviewAsStudent: { offeringId?: string; code?: string } | undefined;
+  AccountVsDevice: undefined;
+  NameIdentity: undefined;
+  ImportResults: undefined;
+  LocalMirror: undefined;
+  SwitchAccount: undefined;
+  Handover: { lecturerId?: string } | undefined;
+  PendingActions: undefined;
+  ViewAsStudent: { studentId?: string; code?: string } | undefined;
+  ChangeRestriction: { fileName?: string; code?: string } | undefined;
+  FreeUpSpace: undefined;
 };
 
 export type AuthScreen<T extends keyof AuthStackParams> = NativeStackScreenProps<

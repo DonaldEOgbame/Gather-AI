@@ -12,7 +12,7 @@ import { useAuth } from "@/stores/auth";
  * read, bookmark, share-out with the clean renamed name, AI summary seam) with
  * hand-off to the system viewer via Sharing.
  */
-export default function ViewerScreen({ route }: any) {
+export default function ViewerScreen({ route, navigation }: any) {
   const { palette } = useTheme();
   const { title, sha256, placementId } = route.params as { title: string; sha256?: string; placementId?: string };
   const [path, setPath] = useState<string | null>(null);
@@ -70,6 +70,7 @@ export default function ViewerScreen({ route }: any) {
           <View style={{ flex: 1 }}>
             <Txt variant="h2" numberOfLines={2} style={{ fontSize: 18 }}>{title}</Txt>
             <Txt variant="faint" style={{ fontSize: 12, marginTop: 3 }}>{restriction.toUpperCase()} · {sha256?.slice(0, 10)}…</Txt>
+            <Txt onPress={() => navigation.navigate("ReportIssue", { title })} style={{ fontSize: 12, ...font(700), color: palette.accents.peach.fg, marginTop: 4 }}>Report a problem</Txt>
           </View>
           <LifecyclePill status={restriction} />
         </View>

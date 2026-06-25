@@ -181,6 +181,8 @@ export const offeringsApi = {
 export const registrationApi = {
   submit: (body: { semester_id: string; offering_ids: string[] }) =>
     request<StudentRegistrationOut>("/registration", { method: "POST", body }),
+  availableOfferings: (semesterId: string) =>
+    request<OfferingOut[]>(`/registration/available-offerings/${semesterId}`),
   getMy: (semesterId: string) =>
     request<StudentRegistrationOut>(`/registration/my/${semesterId}`),
   listPending: (semesterId: string) =>

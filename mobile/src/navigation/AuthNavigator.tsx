@@ -5,6 +5,7 @@ import LoginScreen from "@/screens/auth/LoginScreen";
 import ActivateScreen from "@/screens/auth/ActivateScreen";
 import JoinCodeScreen from "@/screens/auth/JoinCodeScreen";
 import OtpScreen from "@/screens/auth/OtpScreen";
+import RequestAccessScreen from "@/screens/admin/RequestAccessScreen";
 
 const Stack = createNativeStackNavigator<AuthStackParams>();
 
@@ -24,6 +25,7 @@ export default function AuthNavigator() {
       <Stack.Screen name="Activate" component={ActivateScreen} options={minimalHeader} />
       <Stack.Screen name="JoinCode" component={JoinCodeScreen} options={minimalHeader} />
       <Stack.Screen name="Otp" component={OtpScreen} options={minimalHeader} />
+      <Stack.Screen name="RequestAccess" component={RequestAccessScreen} options={minimalHeader} />
     </Stack.Navigator>
   );
 }

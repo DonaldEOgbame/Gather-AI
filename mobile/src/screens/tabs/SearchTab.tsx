@@ -30,7 +30,10 @@ export default function SearchTab() {
   return (
     <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: palette.bg }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 6 }}>
-        <Txt variant="title">Search</Txt>
+        <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Txt variant="title">Search</Txt>
+          <Txt onPress={() => nav.navigate("SearchInFiles")} style={{ fontSize: 13, ...font(700), color: palette.textFaint }}>Inside files</Txt>
+        </View>
 
         {/* Search bar */}
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: palette.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 4, marginTop: 14, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>

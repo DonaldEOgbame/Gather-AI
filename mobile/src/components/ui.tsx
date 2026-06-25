@@ -560,3 +560,15 @@ export function Banner({ text, tone = "warning" }: { text: string; tone?: "warni
     </View>
   );
 }
+
+/** Pastel-tinted advisory card (design `infoCard`): accent tile-less icon + body. */
+export function InfoCard({ accent, icon, text }: { accent: AccentName; icon: IconName; text: string }) {
+  const { palette } = useTheme();
+  const a = palette.accents[accent];
+  return (
+    <View style={{ backgroundColor: a.bg, borderRadius: 14, padding: 13, flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
+      <Icon name={icon} size={18} color={a.fg} />
+      <Text style={{ flex: 1, fontSize: 12.5, lineHeight: 18, ...font(600), color: palette.text }}>{text}</Text>
+    </View>
+  );
+}

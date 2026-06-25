@@ -25,7 +25,6 @@ export default function ProfileTab() {
   const { palette } = useTheme();
   const nav = useNavigation<any>();
   const user = useAuth((s) => s.user);
-  const logout = useAuth((s) => s.logout);
   const { data: courses } = useCourses();
   const [stats, setStats] = useState<LibraryStats | null>(null);
 
@@ -93,6 +92,35 @@ export default function ProfileTab() {
               <ListCard icon="clock" accent="lilac" title="File versions" onPress={() => nav.navigate("Versions")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
               <ListCard icon="sparkle" accent="peach" title="Smart summaries" onPress={() => nav.navigate("PreDownload")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
             </View>
+
+            <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 22, marginBottom: 8 }}>LIBRARY & DATA</Txt>
+            <View style={{ gap: 10 }}>
+              <ListCard icon="bookmark" accent="peach" title="Collections" onPress={() => nav.navigate("Collections")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="cloud" accent="sky" title="Personal library backup" onPress={() => nav.navigate("LibraryBackup")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="download" accent="mint" title="Restore on new device" onPress={() => nav.navigate("Restore")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="refresh" accent="lilac" title="What syncs across devices" onPress={() => nav.navigate("SyncInfo")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="sun" accent="lemon" title="Performance & lite mode" onPress={() => nav.navigate("LiteMode")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="grid" accent="sky" title="Data usage" onPress={() => nav.navigate("DataCost")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="eye" accent="blush" title="Restricted file preview" onPress={() => nav.navigate("RestrictedViewer")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+            </View>
+
+            <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 22, marginBottom: 8 }}>SEMESTER & WORKFLOW</Txt>
+            <View style={{ gap: 10 }}>
+              <ListCard icon="check" accent="mint" title="Register courses" onPress={() => nav.navigate("RegisterCourses")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="sparkle" accent="lilac" title="New semester (preview)" onPress={() => nav.navigate("NewSemester")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="refresh" accent="sky" title="Reorganizing (preview)" onPress={() => nav.navigate("Reorganizing")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="logo" accent="peach" title="Save to Gather (preview)" onPress={() => nav.navigate("ShareToGather")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+            </View>
+
+            <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 22, marginBottom: 8 }}>DEVICE & ACCOUNT</Txt>
+            <View style={{ gap: 10 }}>
+              <ListCard icon="user" accent="lilac" title="Name & identity" onPress={() => nav.navigate("NameIdentity")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="cloud" accent="sky" title="What syncs vs stays on device" onPress={() => nav.navigate("AccountVsDevice")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="folder" accent="mint" title="Local mirror" onPress={() => nav.navigate("LocalMirror")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="camera" accent="peach" title="Find academic photos" onPress={() => nav.navigate("PhotoConsent")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="trash" accent="lemon" title="Free up space" onPress={() => nav.navigate("FreeUpSpace")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+              <ListCard icon="users" accent="sky" title="Switch account" onPress={() => nav.navigate("SwitchAccount")} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+            </View>
           </>
         )}
 
@@ -105,7 +133,7 @@ export default function ProfileTab() {
         </View>
 
         <View style={{ marginTop: 16 }}>
-          <Button title="Sign out" variant="ghost" icon="logout" onPress={logout} />
+          <Button title="Sign out" variant="ghost" icon="logout" onPress={() => nav.navigate("LogoutOptions")} />
         </View>
       </ScrollView>
     </SafeAreaView>

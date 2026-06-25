@@ -106,7 +106,7 @@ export default function FolderDetailScreen({ route }: RootScreen<"FolderDetail">
 
         {keywords !== null && (
           <View style={{ marginTop: 14 }}>
-            <Button title="Link to course" variant="ghost" icon="folder" onPress={linkToCourse} />
+            <Button title="Link to course" variant="ghost" icon="folder" onPress={() => nav.navigate("SmartCluster", { folderId, name })} />
           </View>
         )}
         {isCollection && (
@@ -131,7 +131,7 @@ export default function FolderDetailScreen({ route }: RootScreen<"FolderDetail">
             <Pressable
               key={item.id}
               onPress={() => nav.navigate("Viewer", { placementId: item.id, title: item.display_name, sha256: item.sha256 })}
-              onLongPress={() => longPress(item)}
+              onLongPress={() => nav.navigate("FileActions", { title: item.display_name, meta: `was: ${item.original_name}` })}
               style={({ pressed }) => ({ backgroundColor: palette.card, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 13, opacity: pressed ? 0.85 : 1, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 })}
             >
               <TinyIcon icon="file" accent={accentFor(item.id)} size={44} iconSize={22} />

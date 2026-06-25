@@ -119,6 +119,10 @@ export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
               <Button title="Join code" variant="ghost" onPress={() => navigation.navigate("JoinCode")} />
             </View>
           </View>
+
+          <Txt onPress={() => navigation.navigate("RequestAccess")} variant="muted" style={{ textAlign: "center", marginTop: 22, ...font(700), fontSize: 13.5 }}>
+            Bring Gather to your school →
+          </Txt>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

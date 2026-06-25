@@ -181,7 +181,7 @@ export default function StudentHomeTab() {
         {/* Today's schedule strip */}
         {timetable.length > 0 && (
           <View style={{ marginTop: 22 }}>
-            <SectionHeader title="Today's schedule" action={{ label: "Ready for today", onPress: () => nav.navigate("ReadyToday") }} />
+            <SectionHeader title="Today's schedule" action={{ label: "Full schedule", onPress: () => nav.navigate("Schedule") }} />
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={{ flexDirection: "row", gap: 10 }}>
                 {timetable.map((slot) => {

@@ -236,8 +236,13 @@ export default function OfferingDetailScreen({ route, navigation }: RootScreen<"
               ["megaphone", "lemon", "Post announcement", "AnnouncementCompose"],
               ["file", "peach", "File reports", "FileReports"],
               ["clock", "lilac", "Version history", "VersionRollback"],
+              ["check", "mint", "Registration approvals", "AdvisorApproval"],
               ["shield", "lilac", "Sharing restriction", "SharingRestriction"],
               ["calendar", "mint", "Timetable", "TimetableEditor"],
+              ["eye", "lilac", "Preview as student", "PreviewAsStudent"],
+              ["lock", "sky", "Change restriction", "ChangeRestriction"],
+              ["trash", "peach", "Emergency takedown", "Takedown"],
+              ["cloud", "lemon", "Pending actions (offline)", "PendingActions"],
             ] as [IconName, AccentName, string, string][]).map(([icon, accent, title, route]) => (
               <ListCard
                 key={route}
@@ -255,12 +260,14 @@ export default function OfferingDetailScreen({ route, navigation }: RootScreen<"
         <View style={{ marginBottom: 16 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <Txt variant="h2">Announcements</Txt>
-            {(role === "lecturer" || role === "admin") && !isArchived && (
+            {(role === "lecturer" || role === "admin") && !isArchived ? (
               <Button
                 title={showAnnounceForm ? "Cancel" : "Post"}
                 variant="secondary"
                 onPress={() => setShowAnnounceForm(!showAnnounceForm)}
               />
+            ) : (
+              <Txt onPress={() => navigation.navigate("AnnouncementsFeed", { offeringId, code })} style={{ fontSize: 13, ...font(700), color: palette.textFaint }}>See all</Txt>
             )}
           </View>
 

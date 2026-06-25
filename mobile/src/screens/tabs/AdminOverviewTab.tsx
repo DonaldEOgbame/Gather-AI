@@ -16,6 +16,19 @@ const POLICIES: [IconName, AccentName, string, string][] = [
   ["clock", "lemon", "Audit log", "AuditLog"],
 ];
 
+const SESSIONS: [IconName, AccentName, string, string][] = [
+  ["calendar", "mint", "Academic sessions", "Sessions"],
+  ["refresh", "sky", "Semester rollover", "Rollover"],
+  ["book", "lilac", "Add offering", "AddOffering"],
+  ["users", "peach", "Tenant access requests", "TenantQueue"],
+];
+
+const OPS: [IconName, AccentName, string, string][] = [
+  ["upload", "sky", "Roster import results", "ImportResults"],
+  ["logout", "peach", "Remove a lecturer", "Handover"],
+  ["eye", "lilac", "View as student", "ViewAsStudent"],
+];
+
 function StatCard({ icon, accent, value, label }: { icon: "book" | "calendar"; accent: AccentName; value: string; label: string }) {
   const { palette } = useTheme();
   return (
@@ -58,6 +71,22 @@ export default function AdminOverviewTab() {
         <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 24, marginBottom: 8 }}>POLICIES & CONTROLS</Txt>
         <View style={{ gap: 10 }}>
           {POLICIES.map(([icon, accent, title, route]) => (
+            <ListCard key={route} icon={icon} accent={accent} title={title} onPress={() => nav.navigate(route)} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+          ))}
+        </View>
+
+        {/* Sessions & the academic calendar (design 77–82) */}
+        <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 24, marginBottom: 8 }}>SESSIONS & ACCESS</Txt>
+        <View style={{ gap: 10 }}>
+          {SESSIONS.map(([icon, accent, title, route]) => (
+            <ListCard key={route} icon={icon} accent={accent} title={title} onPress={() => nav.navigate(route)} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
+          ))}
+        </View>
+
+        {/* Operations & support (design 97, 101, 103) */}
+        <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 24, marginBottom: 8 }}>OPERATIONS</Txt>
+        <View style={{ gap: 10 }}>
+          {OPS.map(([icon, accent, title, route]) => (
             <ListCard key={route} icon={icon} accent={accent} title={title} onPress={() => nav.navigate(route)} right={<Icon name="chev" size={18} color={palette.textFaint} />} />
           ))}
         </View>
