@@ -344,6 +344,53 @@ def add_timetable_slot(
     return _slot_out(s, off, course)
 
 
+class TimetableSlotPatchIn(BaseModel):
+    start_time: str | None = None
+    end_time: str | None = None
+    room: str | None = None
+
+
+@router.patch("/slot/{slot_id}")
+def update_timetable_slot(
+    slot_id: str,
+    body: TimetableSlotPatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    _check_can_edit(user)
+    s = db.get(TimetableSession, slot_id)
+    if not s:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Timetable slot not found")
+    if body.start_time is not None:
+        s.start_time = body.start_time
+    if body.end_time is not None:
+        s.end_time = body.end_time
+    if body.room is not None:
+        s.room = body.room
+    db.commit()
+    db.refresh(s)
+    off = db.get(CourseOffering, s.offering_id)
+    course = db.get(Course, off.course_id) if off else None
+    log_action(db, user.id, "update_timetable_slot", slot_id, f"Updated to {s.start_time}-{s.end_time} {s.room}")
+    return _slot_out(s, off, course)
+
+
+@router.delete("/slot/{slot_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_timetable_slot(
+    slot_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    _check_can_edit(user)
+    s = db.get(TimetableSession, slot_id)
+    if not s:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Timetable slot not found")
+    offering_id = s.offering_id
+    db.delete(s)
+    db.commit()
+    log_action(db, user.id, "delete_timetable_slot", slot_id, f"Deleted slot from offering {offering_id}")
+
+
 # ---------------------------------------------------------------------------
 # Legacy Compatibility Endpoints (for automated test suite)
 # ---------------------------------------------------------------------------

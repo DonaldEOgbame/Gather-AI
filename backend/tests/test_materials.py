@@ -78,3 +78,26 @@ def test_unenrolled_student_cannot_see_or_download(client):
     # draft is invisible to an unenrolled student, and download 404s
     assert client.get("/materials", headers=SH, params={"course_id": course["id"]}).json() == []
     assert client.get(f"/materials/{mat['id']}/download", headers=SH).status_code == 404
+
+
+def test_get_material_summary(client):
+    inst, H = _admin(client)
+    course = _course(client, inst, H)
+    payload = b"payload-bytes"
+    mat = client.post(
+        "/materials",
+        headers=H,
+        data={"course_id": course["id"], "week": "4", "title": "Lecture"},
+        files={"file": ("CS101_Week4.pdf", payload, "application/pdf")},
+    ).json()
+
+    # Get summary
+    r = client.get(f"/materials/{mat['id']}/summary", headers=H)
+    assert r.status_code == 200, r.text
+    body = r.json()
+    assert "tldr" in body
+    assert "key_terms" in body
+    assert len(body["tldr"]) == 3
+    assert len(body["key_terms"]) == 5
+    assert body["tldr"][0] == "Stub summary bullet 1."
+

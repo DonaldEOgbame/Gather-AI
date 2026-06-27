@@ -13,7 +13,7 @@ import { useAuth } from "@/stores/auth";
  * hand-off to the system viewer via Sharing.
  */
 export default function ViewerScreen({ route, navigation }: any) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const { title, sha256, placementId } = route.params as { title: string; sha256?: string; placementId?: string };
   const [path, setPath] = useState<string | null>(null);
   const [read, setReadState] = useState(false);
@@ -76,7 +76,7 @@ export default function ViewerScreen({ route, navigation }: any) {
         </View>
 
         {/* Document surface */}
-        <View style={{ flex: 1, minHeight: 300, backgroundColor: palette.card, borderRadius: 18, padding: 18, marginTop: 14, overflow: "hidden", shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+        <View style={{ flex: 1, minHeight: 300, backgroundColor: palette.card, borderRadius: 18, padding: 18, marginTop: 14, overflow: "hidden", shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
           {restriction === "view-only" ? (
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: "row", alignItems: "center", gap: 7, borderBottomColor: palette.border, borderBottomWidth: 1, paddingBottom: 10, marginBottom: 12 }}>
@@ -90,7 +90,7 @@ export default function ViewerScreen({ route, navigation }: any) {
           ) : (
             <View style={{ flex: 1, borderRadius: 12, backgroundColor: palette.field, padding: 16, gap: 8 }}>
               {[1, 0.8, 0.95, 0.6, 0.9, 0.7, 0.4].map((w, i) => (
-                <View key={i} style={{ height: 9, borderRadius: 4, backgroundColor: "#E3E6EB", width: `${w * 100}%` }} />
+                <View key={i} style={{ height: 9, borderRadius: 4, backgroundColor: palette.border, width: `${w * 100}%` }} />
               ))}
             </View>
           )}
@@ -116,9 +116,9 @@ export default function ViewerScreen({ route, navigation }: any) {
             <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, flexDirection: "row", flexWrap: "wrap", justifyContent: "space-around", alignContent: "space-around" }}>
               {Array.from({ length: 9 }).map((_, i) => (
                 <View key={i} style={{ width: "30%", height: "30%", alignItems: "center", justifyContent: "center", transform: [{ rotate: "-30deg" }], opacity: 0.08 }}>
-                  <Txt style={{ ...font(700), fontSize: 12, color: "#000", textAlign: "center" }}>{user.full_name || "STUDENT"}</Txt>
-                  <Txt style={{ fontSize: 10, color: "#000", textAlign: "center", marginTop: 2 }}>{user.matric_or_staff_id || "MATRIC"}</Txt>
-                  <Txt style={{ fontSize: 8, ...font(700), color: "#FF0000", textAlign: "center", marginTop: 2 }}>DO NOT COPY</Txt>
+                  <Txt style={{ ...font(700), fontSize: 12, color: palette.text, textAlign: "center" }}>{user.full_name || "STUDENT"}</Txt>
+                  <Txt style={{ fontSize: 10, color: palette.text, textAlign: "center", marginTop: 2 }}>{user.matric_or_staff_id || "MATRIC"}</Txt>
+                  <Txt style={{ fontSize: 8, ...font(700), color: palette.danger, textAlign: "center", marginTop: 2 }}>DO NOT COPY</Txt>
                 </View>
               ))}
             </View>

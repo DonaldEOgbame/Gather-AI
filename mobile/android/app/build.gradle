@@ -104,15 +104,26 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Sideload release signing. Credentials come from gradle properties
+            // (kept in ~/.gradle/gradle.properties, outside the repo); falls back
+            // to the debug key if they aren't present so debug builds still work.
+            if (project.hasProperty('GATHER_RELEASE_STORE_FILE')) {
+                storeFile file(project.property('GATHER_RELEASE_STORE_FILE'))
+                storePassword project.property('GATHER_RELEASE_STORE_PASSWORD')
+                keyAlias project.property('GATHER_RELEASE_KEY_ALIAS')
+                keyPassword project.property('GATHER_RELEASE_KEY_PASSWORD')
+            }
+        }
     }
     buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            // Caution! In production, you need to generate your own keystore file.
-            // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            // Signed with the dedicated release keystore when its credentials are
+            // available (see ~/.gradle/gradle.properties), else the debug key.
+            signingConfig project.hasProperty('GATHER_RELEASE_STORE_FILE') ? signingConfigs.release : signingConfigs.debug
             def enableShrinkResources = findProperty('android.enableShrinkResourcesInReleaseBuilds') ?: 'false'
             shrinkResources enableShrinkResources.toBoolean()
             minifyEnabled enableMinifyInReleaseBuilds
@@ -180,3 +191,5 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+apply plugin: 'com.google.gms.google-services'

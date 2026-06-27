@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, View, Modal } from "re
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as DocumentPicker from "expo-document-picker";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { Txt, Button, EmptyState, LifecyclePill, TinyIcon } from "@/components/ui";
+import { Txt, Button, EmptyState, LifecyclePill, TinyIcon, Scrim, Sheet } from "@/components/ui";
 import { Field } from "@/components/Field";
 import { Icon } from "@/components/Icon";
 import { offeringsApi, materialsApi } from "@/api/endpoints";
@@ -17,7 +17,7 @@ import type { OfferingOut, MaterialOut } from "@/api/types";
  * review AI-suggested metadata (editable), and batch publish/schedule.
  */
 export default function DraftsTab() {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const nav = useNavigation<any>();
   const [courses, setCourses] = useState<OfferingOut[]>([]);
   const [drafts, setDrafts] = useState<MaterialOut[]>([]);
@@ -149,7 +149,7 @@ export default function DraftsTab() {
           accessibilityLabel="Add a file"
           style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: allCoursesFull ? palette.textFaint : palette.primary, alignItems: "center", justifyContent: "center" }}
         >
-          <Icon name="plus" size={22} color="#fff" />
+          <Icon name="plus" size={22} color={palette.primaryText} />
         </Pressable>
       </View>
 
@@ -169,7 +169,7 @@ export default function DraftsTab() {
           const percent = Math.min((size / limit) * 100, 100);
           const isFull = size >= limit;
           return (
-            <View key={c.id} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, marginBottom: 10, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+            <View key={c.id} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, marginBottom: 10, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
                 <Txt style={{ fontSize: 13, ...font(700), color: palette.text }}>{c.code} storage</Txt>
                 <Txt variant="muted" style={{ fontSize: 12 }}>{formatBytes(size)} / 2 GB</Txt>
@@ -195,7 +195,7 @@ export default function DraftsTab() {
               return (
                 <View
                   key={item.id}
-                  style={{ backgroundColor: palette.card, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 2, borderColor: isSel ? palette.primary : "transparent", shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}
+                  style={{ backgroundColor: palette.card, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 2, borderColor: isSel ? palette.primary : "transparent", shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}
                 >
                   <Pressable
                     accessibilityLabel={isSel ? "Deselect" : "Select"}
@@ -204,7 +204,7 @@ export default function DraftsTab() {
                     onPress={() => toggle(item.id)}
                     style={{ width: 24, height: 24, borderRadius: 8, backgroundColor: isSel ? palette.primary : palette.card, borderWidth: isSel ? 0 : 1.5, borderColor: palette.border, alignItems: "center", justifyContent: "center" }}
                   >
-                    {isSel ? <Icon name="check" size={15} color="#fff" width={2.6} /> : null}
+                    {isSel ? <Icon name="check" size={15} color={palette.primaryText} width={2.6} /> : null}
                   </Pressable>
                   <TinyIcon icon="file" accent={accentFor(item.id)} size={42} iconSize={20} />
                   <Pressable onPress={() => openEdit(item)} style={{ flex: 1, minWidth: 0 }}>
@@ -241,9 +241,9 @@ export default function DraftsTab() {
 
       {/* Edit Metadata sheet */}
       <Modal visible={editingDraft !== null} animationType="slide" transparent>
-        <View style={{ flex: 1, backgroundColor: "rgba(20,25,40,0.42)", justifyContent: "flex-end" }}>
-          <View style={{ backgroundColor: palette.card, borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40 }}>
-            <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: "#D3D7DE", alignSelf: "center", marginBottom: 18 }} />
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <Scrim onPress={() => setEditingDraft(null)} />
+          <Sheet>
             <Txt variant="h2" style={{ fontSize: 22, marginBottom: 16 }}>Edit draft</Txt>
             <Field label="Title" value={editTitle} onChangeText={setEditTitle} />
             <Field label="Week (1–15)" icon="calendar" keyboardType="number-pad" value={editWeek} onChangeText={setEditWeek} />
@@ -275,7 +275,7 @@ export default function DraftsTab() {
                 <Button title="Save" onPress={saveEdit} loading={editingBusy} />
               </View>
             </View>
-          </View>
+          </Sheet>
         </View>
       </Modal>
     </SafeAreaView>

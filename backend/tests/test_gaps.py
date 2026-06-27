@@ -315,3 +315,35 @@ def test_course_quota_wall_413(client):
         assert "Course storage full" in r.json()["detail"]
     finally:
         db.close()
+
+
+def test_resolve_course_join_code(client):
+    inst, H = _admin(client)
+    course = _course(client, inst, H)
+    student_headers = _student(client, inst, H, email="s2@u.edu", matric="M2")
+
+    # Update mode to code
+    r = client.patch(
+        f"/courses/{course['id']}/enrollment-mode",
+        headers=H,
+        json={"enrollment_mode": "code"}
+    )
+    assert r.status_code == 200
+
+    # Generate join code
+    r = client.post(
+        f"/courses/{course['id']}/join-code",
+        headers=H,
+        json={"expires_in_hours": 1, "max_uses": 10}
+    )
+    assert r.status_code == 200
+    code = r.json()["code"]
+
+    # Resolve course join code as student
+    r = client.get(
+        f"/offerings/join-code/{code}",
+        headers=student_headers
+    )
+    assert r.status_code == 200
+    assert r.json()["code"] == "CS101"
+

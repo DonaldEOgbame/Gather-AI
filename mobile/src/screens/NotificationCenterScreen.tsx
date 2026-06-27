@@ -53,7 +53,7 @@ export default function NotificationCenterScreen() {
                   alignItems: "flex-start",
                   borderWidth: unread ? 0 : 1,
                   borderColor: palette.border,
-                  shadowColor: "#141928",
+                  shadowColor: palette.shadow,
                   shadowOpacity: unread ? 0.05 : 0,
                   shadowRadius: 3,
                   shadowOffset: { width: 0, height: 1 },

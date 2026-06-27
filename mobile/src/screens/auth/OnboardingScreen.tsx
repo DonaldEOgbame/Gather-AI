@@ -7,12 +7,13 @@ import { Icon } from "@/components/Icon";
 import { useTheme, font, type AccentName } from "@/theme";
 import { requestNotifications } from "@/services/permissions";
 import { useAuth } from "@/stores/auth";
+import LaunchScreen from "./LaunchScreen";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
 /** Persists whether onboarding/permission-priming has been completed. */
 export const useOnboarding = create<{ done: boolean; finish: () => void; replay: () => void }>((set) => ({
-  done: false,
+  done: true,
   finish: () => set({ done: true }),
   replay: () => set({ done: false }),
 }));
@@ -31,16 +32,17 @@ const ORBIT: [number, number, number, string, AccentName][] = [
 
 function ProgressDots({ active }: { active: number }) {
   const { palette } = useTheme();
+  // Design frame 02 draws three dots — the active one widened.
   return (
     <View style={{ flexDirection: "row", justifyContent: "center", gap: 7 }}>
-      {[0, 1].map((i) => (
+      {[0, 1, 2].map((i) => (
         <View
           key={i}
           style={{
             width: i === active ? 20 : 7,
             height: 7,
             borderRadius: 4,
-            backgroundColor: i === active ? palette.primary : "#D3D7DE",
+            backgroundColor: i === active ? palette.primary : palette.toggleTrack,
           }}
         />
       ))}
@@ -49,10 +51,10 @@ function ProgressDots({ active }: { active: number }) {
 }
 
 export default function OnboardingScreen() {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const finish = useOnboarding((s) => s.finish);
   const role = useAuth((s) => s.user?.global_role);
-  const [step, setStep] = useState<0 | 1>(0);
+  const [step, setStep] = useState<"launch" | "intro" | "perms">("launch");
   const [storage, setStorage] = useState(true);
   const [notify, setNotify] = useState(true);
 
@@ -61,14 +63,19 @@ export default function OnboardingScreen() {
   const cx = band / 2;
   const cy = 156;
 
-  if (step === 0) {
+  // Frame 01 · Launch splash, auto-advancing into the intro carousel.
+  if (step === "launch") {
+    return <LaunchScreen onDone={() => setStep("intro")} />;
+  }
+
+  if (step === "intro") {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
         <View style={{ flex: 1, paddingHorizontal: 28 }}>
           {/* Radial cluster */}
           <View style={{ height: 312, width: band, alignSelf: "center", marginTop: 8 }}>
-            <View style={{ position: "absolute", left: cx - 148, top: cy - 148, width: 296, height: 296, borderRadius: 148, borderWidth: 1.5, borderColor: "#EDEFF3" }} />
-            <View style={{ position: "absolute", left: cx - 100, top: cy - 100, width: 200, height: 200, borderRadius: 100, borderWidth: 1.5, borderColor: "#E6E9EF" }} />
+            <View style={{ position: "absolute", left: cx - 148, top: cy - 148, width: 296, height: 296, borderRadius: 148, borderWidth: 1.5, borderColor: palette.fieldBorder }} />
+            <View style={{ position: "absolute", left: cx - 100, top: cy - 100, width: 200, height: 200, borderRadius: 100, borderWidth: 1.5, borderColor: palette.border }} />
             {ORBIT.map(([dx, dy, size, label, accent], i) => {
               const a = palette.accents[accent];
               return (
@@ -84,11 +91,11 @@ export default function OnboardingScreen() {
                     backgroundColor: a.bg,
                     alignItems: "center",
                     justifyContent: "center",
-                    shadowColor: "#141928",
+                    shadowColor: palette.shadow,
                     shadowOpacity: 0.2,
                     shadowRadius: 10,
                     shadowOffset: { width: 0, height: 6 },
-                    elevation: 3,
+                    elevation: scheme === "dark" ? 0 : 3,
                   }}
                 >
                   <Txt style={{ color: a.fg, fontSize: size * 0.26, ...font(800) }}>{label}</Txt>
@@ -106,14 +113,14 @@ export default function OnboardingScreen() {
                 backgroundColor: palette.primary,
                 alignItems: "center",
                 justifyContent: "center",
-                shadowColor: "#141928",
+                shadowColor: palette.shadow,
                 shadowOpacity: 0.5,
                 shadowRadius: 28,
                 shadowOffset: { width: 0, height: 16 },
-                elevation: 8,
+                elevation: scheme === "dark" ? 0 : 8,
               }}
             >
-              <Icon name="logo" size={44} color="#fff" width={1.7} />
+              <Icon name="logo" size={44} color={palette.primaryText} width={1.7} />
             </View>
           </View>
 
@@ -128,7 +135,7 @@ export default function OnboardingScreen() {
 
           <View style={{ marginTop: "auto", gap: 16, paddingBottom: 24 }}>
             <ProgressDots active={0} />
-            <Button title="Get started" onPress={() => setStep(1)} />
+            <Button title="Get started" onPress={() => setStep("perms")} />
           </View>
         </View>
       </SafeAreaView>
@@ -140,7 +147,7 @@ export default function OnboardingScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
       <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 6 }}>
         <Txt variant="faint" style={{ letterSpacing: 0.6, marginTop: 18, fontSize: 13, ...font(700) }}>
-          STEP 2 OF 2
+          STEP 3 OF 3
         </Txt>
         <Txt style={{ fontSize: 27, lineHeight: 31, marginTop: 12, ...font(800), letterSpacing: -0.5, color: palette.text }}>
           A couple of permissions
@@ -197,7 +204,7 @@ function PermissionCard({
   value: boolean;
   onChange: (v: boolean) => void;
 }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
     <View
       style={{
@@ -208,11 +215,11 @@ function PermissionCard({
         flexDirection: "row",
         gap: 14,
         alignItems: "flex-start",
-        shadowColor: "#141928",
+        shadowColor: palette.shadow,
         shadowOpacity: 0.05,
         shadowRadius: 3,
         shadowOffset: { width: 0, height: 1 },
-        elevation: 1,
+        elevation: scheme === "dark" ? 0 : 1,
       }}
     >
       <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: palette.accents[accent].bg, alignItems: "center", justifyContent: "center" }}>

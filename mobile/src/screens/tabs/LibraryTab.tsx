@@ -14,9 +14,9 @@ import { coursesApi } from "@/api/endpoints";
 import { formatBytes } from "@/util/format";
 
 function StatTile({ value, label, fg }: { value: string; label: string; fg?: string }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
-    <View style={{ flex: 1, backgroundColor: palette.card, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+    <View style={{ flex: 1, backgroundColor: palette.card, borderRadius: 16, paddingVertical: 14, paddingHorizontal: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
       <Txt style={{ fontSize: 18, ...font(800), color: fg ?? palette.text }}>{value}</Txt>
       <Txt style={{ fontSize: 12, ...font(600), color: palette.textFaint, marginTop: 2 }}>{label}</Txt>
     </View>
@@ -80,7 +80,7 @@ export default function LibraryTab() {
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 36 }}>
           <View style={{ width: 180, height: 180, marginBottom: 8 }}>
             <Svg width={180} height={180} viewBox="0 0 180 180">
-              <Circle cx={90} cy={90} r={R} fill="none" stroke="#E6E9EF" strokeWidth={12} />
+              <Circle cx={90} cy={90} r={R} fill="none" stroke={palette.border} strokeWidth={12} />
               <Circle cx={90} cy={90} r={R} fill="none" stroke={palette.primary} strokeWidth={12} strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - pct / 100)} transform="rotate(-90 90 90)" />
             </Svg>
             <View style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
@@ -117,10 +117,10 @@ export default function LibraryTab() {
           style={{ marginTop: 16, backgroundColor: palette.primary, borderRadius: 22, padding: 18, flexDirection: "row", alignItems: "center", gap: 14 }}
         >
           <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center" }}>
-            <Icon name="sparkle" size={24} color="#fff" />
+            <Icon name="sparkle" size={24} color={palette.primaryText} />
           </View>
           <View style={{ flex: 1 }}>
-            <Txt style={{ fontSize: 16, ...font(700), color: "#fff" }}>Organize my phone</Txt>
+            <Txt style={{ fontSize: 16, ...font(700), color: palette.primaryText }}>Organize my phone</Txt>
             <Txt style={{ fontSize: 12.5, ...font(500), color: "rgba(255,255,255,0.65)", marginTop: 2 }}>Scan · de-dupe · sort by course</Txt>
           </View>
           <Icon name="chev" size={20} color="rgba(255,255,255,0.7)" />

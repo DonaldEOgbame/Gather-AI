@@ -62,7 +62,8 @@ export default function RolloverScreen({ navigation }: RootScreen<"Rollover">) {
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
+        <Txt variant="title" style={{ marginBottom: 16 }}>Semester rollover</Txt>
         <InfoCard accent="lemon" icon="shield" text="This archives the current semester. Students keep read-only access — nothing is deleted." />
 
         <View style={{ marginTop: 20 }}>
@@ -76,12 +77,12 @@ export default function RolloverScreen({ navigation }: RootScreen<"Rollover">) {
                 <View style={{ alignItems: "center" }}>
                   <View style={{ width: 34, height: 34, borderRadius: 17, backgroundColor: circleBg, borderWidth: state === "next" ? 2 : 0, borderColor: palette.border, alignItems: "center", justifyContent: "center" }}>
                     {state === "done" ? (
-                      <Icon name="check" size={17} color="#fff" width={2.6} />
+                      <Icon name="check" size={17} color={palette.primaryText} width={2.6} />
                     ) : (
-                      <Txt style={{ fontSize: 14, ...font(800), color: state === "now" ? "#fff" : palette.textFaint }}>{i + 1}</Txt>
+                      <Txt style={{ fontSize: 14, ...font(800), color: state === "now" ? palette.primaryText : palette.textFaint }}>{i + 1}</Txt>
                     )}
                   </View>
-                  {i < steps.length - 1 && <View style={{ flex: 1, width: 2, backgroundColor: "#EDEFF3", marginTop: 4 }} />}
+                  {i < steps.length - 1 && <View style={{ flex: 1, width: 2, backgroundColor: palette.fieldBorder, marginTop: 4 }} />}
                 </View>
                 <View style={{ flex: 1, paddingBottom: 22 }}>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>

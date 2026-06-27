@@ -1,8 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import auth, courses, materials, audit_logs, enrollment, timetable, backup, announcements, reports, sessions, offerings
 
 app = FastAPI(title="Gather-AI (UniPortal) API", version="0.1.0")
+
+# CORS — the mobile client is a native app (no browser Origin enforcement), but a
+# permissive policy keeps Expo web preview, tunnels, and dev tooling working too.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(auth.router)
 app.include_router(audit_logs.router)

@@ -9,6 +9,7 @@
     "newArchEnabled": false,
     "android": {
       "package": "ai.gather.uniportal",
+      "googleServicesFile": "./google-services.json",
       "permissions": [
         "INTERNET",
         "READ_MEDIA_IMAGES",
@@ -18,13 +19,26 @@
         "MANAGE_EXTERNAL_STORAGE",
         "USE_BIOMETRIC",
         "POST_NOTIFICATIONS"
+      ],
+      "intentFilters": [
+        {
+          "action": "SEND",
+          "category": ["DEFAULT"],
+          "data": [{ "mimeType": "*/*" }]
+        },
+        {
+          "action": "SEND_MULTIPLE",
+          "category": ["DEFAULT"],
+          "data": [{ "mimeType": "*/*" }]
+        }
       ]
     },
     "plugins": [
       "expo-secure-store",
       "expo-local-authentication",
       "expo-notifications",
-      "expo-font"
+      "expo-font",
+      "./plugins/withUniportalFiles"
     ],
     "extra": {
       "comment": "Android-first, enterprise (sideloaded/MDM) distribution. MANAGE_EXTERNAL_STORAGE enables the true recursive Scan & Sort with Copy-default + 30-day trash. Not intended for Google Play."

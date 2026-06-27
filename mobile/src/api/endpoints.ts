@@ -2,7 +2,10 @@
 import { request } from "./client";
 import type {
   AccessOut,
+  AccountStatus,
   CourseOut,
+  GlobalRole,
+  InstitutionOut,
   MaterialOut,
   NotificationOut,
   NotificationSettingsOut,
@@ -20,6 +23,28 @@ import type {
 } from "./types";
 
 export const authApi = {
+  patchMe: (body: { display_name?: string; photo_consent?: boolean }) =>
+    request<UserOut>("/auth/me", { method: "PATCH", body }),
+  listUsers: (role?: string) =>
+    request<UserOut[]>(`/auth/users${role ? `?role=${encodeURIComponent(role)}` : ""}`),
+  getUser: (id: string) => request<UserOut>(`/auth/users/${id}`),
+  resetPassword: (id: string) =>
+    request<{ status: string; reset_token: string; expires_at: string }>(
+      `/auth/users/${id}/reset-password`,
+      { method: "POST" }
+    ),
+  changeRole: (id: string, global_role: GlobalRole) =>
+    request<UserOut>(`/auth/users/${id}/role`, {
+      method: "PATCH",
+      body: { global_role },
+    }),
+  setStatus: (id: string, statusValue: AccountStatus) =>
+    request<UserOut>(`/auth/users/${id}/status`, {
+      method: "PATCH",
+      body: { status: statusValue },
+    }),
+  revokeAllOtherSessions: () =>
+    request<{ revoked: number }>("/auth/sessions/revoke-others", { method: "POST" }),
   login: (username: string, password: string, deviceName: string) => {
     // OAuth2PasswordRequestForm expects urlencoded form fields.
     const form = new FormData();
@@ -30,12 +55,30 @@ export const authApi = {
       { method: "POST", form, auth: false }
     );
   },
+  forgotPassword: (email: string) =>
+    request<{ status: string; reset_token: string | null }>("/auth/forgot-password", {
+      method: "POST",
+      auth: false,
+      body: { email },
+    }),
+  resetPasswordPublic: (token: string, password: string) =>
+    request<UserOut>("/auth/reset-password", {
+      method: "POST",
+      auth: false,
+      body: { token, password },
+    }),
   activate: (token: string, password: string) =>
     request<UserOut>("/auth/activate", {
       method: "POST",
       auth: false,
       body: { token, password },
     }),
+  /** Public match-preview for the Join screen (design 06): code → institution. */
+  resolveJoinCode: (code: string) =>
+    request<{ id: string; name: string; timezone: string }>(
+      `/auth/resolve-join-code?code=${encodeURIComponent(code)}`,
+      { auth: false }
+    ),
   selfRegister: (body: {
     join_code: string;
     email: string;
@@ -85,6 +128,54 @@ export const notifApi = {
 
 export const coursesApi = {
   list: () => request<CourseOut[]>("/courses"),
+  storageStats: () =>
+    request<{
+      total_bytes: number;
+      by_department: { department_id: string; department_name: string; bytes_used: number }[];
+    }>("/courses/storage-stats"),
+  listDepartments: () =>
+    request<{ id: string; university_id: string; name: string }[]>("/courses/departments"),
+  createDepartment: (body: { university_id: string; name: string }) =>
+    request<{ id: string; university_id: string; name: string }>("/courses/departments", {
+      method: "POST",
+      body,
+    }),
+  getInstitution: () =>
+    request<{
+      id: string;
+      name: string;
+      join_code: string | null;
+      timezone: string;
+      sharing_ceiling: string;
+      watermark_mandatory: boolean;
+      status: string;
+      retention_months: number;
+    }>("/courses/institutions/me"),
+  requestAccess: (body: {
+    contact_name: string;
+    contact_email: string;
+    institution_name: string;
+    country?: string;
+    message?: string;
+  }) =>
+    request<{ id: string; status: string }>("/courses/institutions/request-access", {
+      method: "POST",
+      auth: false,
+      body,
+    }),
+  /** Super-admin: list pending institution access requests (design 81). */
+  listAccessRequests: () =>
+    request<{ id: string; contact_name: string; contact_email: string; institution_name: string; status: string; created_at: string }[]>(
+      "/courses/institutions/access-requests"
+    ),
+  /** Super-admin: provision a new institution + mint its first admin (design 81). */
+  provisionInstitution: (body: {
+    name: string;
+    admin_email: string;
+    admin_full_name?: string;
+    join_code?: string;
+    timezone?: string;
+  }) => request<{ id: string; name: string }>("/courses/institutions/provision", { method: "POST", body }),
   createCourse: (body: {
     department_id: string;
     code: string;
@@ -130,6 +221,10 @@ export const offeringsApi = {
       }`
     ),
   get: (id: string) => request<OfferingOut>(`/offerings/${id}`),
+  patch: (
+    id: string,
+    body: { sharing_ceiling?: string; watermark_mandatory?: boolean; enrollment_mode?: string; status?: string }
+  ) => request<OfferingOut>(`/offerings/${id}`, { method: "PATCH", body }),
   create: (body: {
     course_id: string;
     semester_id: string;
@@ -172,6 +267,15 @@ export const offeringsApi = {
   ) =>
     request<OfferingLecturerOut>(`/offerings/${id}/lecturers`, {
       method: "POST",
+      body,
+    }),
+  updateLecturer: (
+    id: string,
+    lecturerId: string,
+    body: { can_publish?: boolean; can_manage_roster?: boolean }
+  ) =>
+    request<OfferingLecturerOut>(`/offerings/${id}/lecturers/${lecturerId}`, {
+      method: "PATCH",
       body,
     }),
   removeLecturer: (id: string, lecturerId: string) =>
@@ -221,6 +325,9 @@ export const registrationApi = {
 };
 
 export const enrollmentApi = {
+  /** Resolve a student course join code (e.g. "ZKFP8G") to its offering. */
+  resolveCourseJoinCode: (code: string) =>
+    request<OfferingOut>(`/offerings/join-code/${encodeURIComponent(code.trim().toUpperCase())}`),
   enroll: (offeringId: string, code?: string) => {
     if (code) {
       return registrationApi.enrollByCode(offeringId, code);
@@ -240,9 +347,6 @@ export const enrollmentApi = {
       `/offerings/${offeringId}`,
       { method: "PATCH", body: { enrollment_mode: enrollmentMode } }
     ),
-  listRequests: (offeringId: string) => {
-    return request<any[]>(`/registration/pending/legacy/${offeringId}`).catch(() => []);
-  },
   actOnRequest: (requestId: string, approve: boolean) =>
     registrationApi.actOnApproval(requestId, { approve }),
 };
@@ -250,6 +354,22 @@ export const enrollmentApi = {
 export const materialsApi = {
   list: (offeringId: string) =>
     request<MaterialOut[]>(`/materials?offering_id=${offeringId}`),
+  analytics: (offeringId: string) =>
+    request<{
+      total_files: number;
+      total_downloads: number;
+      total_bytes: number;
+      quota_bytes: number;
+      enrolled_students: number;
+      top_materials: {
+        id: string;
+        title: string;
+        original_filename: string;
+        download_count: number;
+        week: number;
+        status: string;
+      }[];
+    }>(`/materials/analytics/${offeringId}`),
   upload: (form: FormData) =>
     request<MaterialOut>("/materials", { method: "POST", form }),
   update: (id: string, body: Record<string, unknown>) =>
@@ -269,6 +389,8 @@ export const materialsApi = {
       `/materials/${id}/remove`,
       { method: "POST", body: { reason } }
     ),
+  summary: (id: string) =>
+    request<{ tldr: string[]; key_terms: string[] }>(`/materials/${id}/summary`),
   downloadUrl: (id: string) => `/materials/${id}/download`,
 };
 
@@ -302,6 +424,10 @@ export const timetableApi = {
     }
   ) =>
     request<any>(`/timetable/offering/${offeringId}`, { method: "POST", body }),
+  updateSlot: (slotId: string, body: { start_time?: string; end_time?: string; room?: string }) =>
+    request<any>(`/timetable/slot/${slotId}`, { method: "PATCH", body }),
+  deleteSlot: (slotId: string) =>
+    request<void>(`/timetable/slot/${slotId}`, { method: "DELETE" }),
 };
 
 export const backupApi = {
@@ -347,4 +473,34 @@ export const reportsApi = {
       method: "PATCH",
       body: { status },
     }),
+};
+
+export const auditLogsApi = {
+  list: (category?: string) =>
+    request<{
+      id: string;
+      institution_id: string;
+      user_id: string;
+      action: string;
+      target_id: string | null;
+      details: string | null;
+      created_at: string;
+      user_display_name: string | null;
+      user_email: string | null;
+    }[]>(`/courses/audit-logs${category && category !== "All" ? `?category=${encodeURIComponent(category)}` : ""}`),
+};
+
+export const institutionApi = {
+  get: () => request<InstitutionOut>("/courses/institutions/me"),
+  patch: (body: {
+    sharing_ceiling?: string;
+    watermark_mandatory?: boolean;
+    retention_months?: number;
+    name?: string;
+    join_code?: string;
+    timezone?: string;
+    allowed_file_types?: string;
+    max_file_size_mb?: number;
+    max_files_per_week?: number;
+  }) => request<InstitutionOut>("/courses/institutions/me", { method: "PATCH", body }),
 };

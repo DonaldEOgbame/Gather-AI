@@ -102,7 +102,7 @@ def main():
             
         # 4. Academic Session
         session = AcademicSession(
-            institution_id=inst.id,
+            university_id=inst.id,
             name="2025/2026",
             start_date=date(2025, 9, 1),
             end_date=date(2026, 6, 30),

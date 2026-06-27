@@ -12,6 +12,7 @@ import React from "react";
 import {
   ActivityIndicator,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextProps,
@@ -19,24 +20,17 @@ import {
   ViewProps,
   ViewStyle,
 } from "react-native";
+import { SafeAreaView, type Edge } from "react-native-safe-area-context";
 import { useTheme, font, accentFor, type AccentName } from "@/theme";
 import { Icon, type IconName } from "./Icon";
 
-export function Screen({ children, style, ...rest }: ViewProps) {
-  const { palette } = useTheme();
-  return (
-    <View style={[{ flex: 1, backgroundColor: palette.bg, padding: 16 }, style]} {...rest}>
-      {children}
-    </View>
-  );
-}
 
 interface CardProps extends ViewProps {
   /** Soft pastel tint (design inspiration). When set, the border is dropped. */
   accent?: AccentName;
 }
 export function Card({ children, style, accent, ...rest }: CardProps) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const tint = accent ? palette.accents[accent] : null;
   return (
     <View
@@ -46,11 +40,11 @@ export function Card({ children, style, accent, ...rest }: CardProps) {
           borderRadius: 18,
           padding: 14,
           // Soft drop shadow matching the design's listCard.
-          shadowColor: "#141928",
+          shadowColor: palette.shadow,
           shadowOpacity: 0.05,
           shadowRadius: 3,
           shadowOffset: { width: 0, height: 1 },
-          elevation: 1,
+          elevation: scheme === "dark" ? 0 : 1,
         },
         style,
       ]}
@@ -90,20 +84,24 @@ export function Txt({ variant = "body", style, ...rest }: TxtProps) {
 interface BtnProps {
   title: string;
   onPress: () => void;
-  variant?: "primary" | "secondary" | "danger" | "ghost";
+  variant?: "primary" | "secondary" | "danger" | "ghost" | "danger-ghost";
   loading?: boolean;
   disabled?: boolean;
   /** Optional leading icon (design pairs upload/share icons with labels). */
   icon?: IconName;
   style?: ViewStyle;
+  textColor?: string;
+  borderColor?: string;
 }
-export function Button({ title, onPress, variant = "primary", loading, disabled, icon, style }: BtnProps) {
+export function Button({ title, onPress, variant = "primary", loading, disabled, icon, style, textColor, borderColor }: BtnProps) {
   const { palette } = useTheme();
-  // primary = ink pill; secondary/ghost = bordered pill; danger = red pill.
+  // primary = ink pill; secondary/ghost = bordered pill; danger = red pill; danger-ghost = outline destructive.
   const filled = variant === "primary" || variant === "danger";
   const bg = variant === "primary" ? palette.primary : variant === "danger" ? palette.danger : palette.card;
-  const fg = filled ? palette.primaryText : palette.text;
-  const bordered = variant === "secondary" || variant === "ghost";
+  const bordered = variant === "secondary" || variant === "ghost" || variant === "danger-ghost";
+  const isDangerGhost = variant === "danger-ghost";
+  const fg = textColor || (isDangerGhost ? palette.danger : (filled ? palette.primaryText : palette.text));
+  const finalBorderColor = borderColor || (isDangerGhost ? palette.dangerSoft : palette.border);
   return (
     <Pressable
       accessibilityRole="button"
@@ -114,7 +112,7 @@ export function Button({ title, onPress, variant = "primary", loading, disabled,
       style={({ pressed }) => [
         {
           backgroundColor: bordered ? "transparent" : bg,
-          borderColor: bordered ? palette.border : "transparent",
+          borderColor: bordered ? finalBorderColor : "transparent",
           borderWidth: bordered ? 1.5 : 0,
           opacity: disabled ? 0.45 : pressed ? 0.85 : 1,
           paddingVertical: filled ? 16 : 14,
@@ -134,7 +132,7 @@ export function Button({ title, onPress, variant = "primary", loading, disabled,
       ) : (
         <>
           {icon ? <Icon name={icon} size={18} color={fg} /> : null}
-          <Text style={{ color: fg, fontSize: filled ? 16 : 14, ...font(700) }}>{title}</Text>
+          <Text numberOfLines={1} style={{ color: fg, fontSize: filled ? 16 : 14, ...font(700) }}>{title}</Text>
         </>
       )}
     </Pressable>
@@ -187,7 +185,7 @@ export function ListCard({
   right?: React.ReactNode;
   onPress?: () => void;
 }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const body = (
     <>
       <TinyIcon icon={icon} accent={accent} />
@@ -211,11 +209,11 @@ export function ListCard({
     flexDirection: "row",
     alignItems: "center",
     gap: 13,
-    shadowColor: "#141928",
+    shadowColor: palette.shadow,
     shadowOpacity: 0.05,
     shadowRadius: 3,
     shadowOffset: { width: 0, height: 1 },
-    elevation: 1,
+    elevation: scheme === "dark" ? 0 : 1,
   };
   if (onPress) {
     return (
@@ -307,13 +305,13 @@ export function Toggle({ value, onValueChange, label }: { value: boolean; onValu
         width: 46,
         height: 28,
         borderRadius: 999,
-        backgroundColor: value ? palette.primary : "#D3D7DE",
+        backgroundColor: value ? palette.primary : palette.toggleTrack,
         padding: 3,
         alignItems: value ? "flex-end" : "flex-start",
         justifyContent: "center",
       }}
     >
-      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: "#fff" }} />
+      <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: palette.primaryText }} />
     </Pressable>
   );
 }
@@ -440,7 +438,7 @@ export function AvatarStack({ names, size = 30 }: { names: string[]; size?: numb
 
 /** White rounded container for stacked SettingItems (design settings cards). */
 export function SettingsGroup({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
     <View
       style={[
@@ -448,11 +446,11 @@ export function SettingsGroup({ children, style }: { children: React.ReactNode; 
           backgroundColor: palette.card,
           borderRadius: 18,
           paddingHorizontal: 16,
-          shadowColor: "#141928",
+          shadowColor: palette.shadow,
           shadowOpacity: 0.05,
           shadowRadius: 3,
           shadowOffset: { width: 0, height: 1 },
-          elevation: 1,
+          elevation: scheme === "dark" ? 0 : 1,
         },
         style,
       ]}
@@ -497,7 +495,7 @@ export function SettingItem({
     gap: 13,
     paddingVertical: 13,
     borderTopWidth: first ? 0 : 1,
-    borderTopColor: "#F1F2F4",
+    borderTopColor: palette.fieldBorder,
   };
   if (onPress) {
     return (
@@ -509,7 +507,7 @@ export function SettingItem({
   return <View style={style}>{body}</View>;
 }
 
-/** Pill segmented control on a filled track (design `seg`). */
+/** Pill segmented control on a filled track (design `seg`) */
 export function Segmented<T extends string>({
   value,
   options,
@@ -519,7 +517,7 @@ export function Segmented<T extends string>({
   options: { key: T; label: string }[];
   onChange: (k: T) => void;
 }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
     <View style={{ flexDirection: "row", backgroundColor: palette.field, borderRadius: 999, padding: 4, gap: 4 }}>
       {options.map((o) => {
@@ -536,11 +534,11 @@ export function Segmented<T extends string>({
               borderRadius: 999,
               alignItems: "center",
               backgroundColor: active ? palette.card : "transparent",
-              shadowColor: "#141928",
+              shadowColor: palette.shadow,
               shadowOpacity: active ? 0.08 : 0,
               shadowRadius: 2,
               shadowOffset: { width: 0, height: 1 },
-              elevation: active ? 1 : 0,
+              elevation: (active && scheme !== "dark") ? 1 : 0,
             }}
           >
             <Text style={{ fontSize: 13, ...font(active ? 700 : 600), color: active ? palette.text : palette.textFaint }}>{o.label}</Text>
@@ -562,13 +560,209 @@ export function Banner({ text, tone = "warning" }: { text: string; tone?: "warni
 }
 
 /** Pastel-tinted advisory card (design `infoCard`): accent tile-less icon + body. */
-export function InfoCard({ accent, icon, text }: { accent: AccentName; icon: IconName; text: string }) {
+export function InfoCard({ accent, icon, text, strong }: { accent: AccentName; icon: IconName; text: string; strong?: boolean }) {
   const { palette } = useTheme();
   const a = palette.accents[accent];
   return (
-    <View style={{ backgroundColor: a.bg, borderRadius: 14, padding: 13, flexDirection: "row", gap: 10, alignItems: "flex-start" }}>
-      <Icon name={icon} size={18} color={a.fg} />
-      <Text style={{ flex: 1, fontSize: 12.5, lineHeight: 18, ...font(600), color: palette.text }}>{text}</Text>
+    <View style={{ backgroundColor: a.bg, borderRadius: 14, padding: 14, flexDirection: "row", gap: 11, alignItems: "flex-start" }}>
+      <Icon name={icon} size={19} color={a.fg} />
+      <Text style={{ flex: 1, fontSize: 12.5, lineHeight: 18.5, ...font(strong ? 700 : 500), color: palette.text }}>{text}</Text>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Scaffold primitives (design `frame` inner content — NOT the phone chrome).
+// The design canvas draws a 372x760 phone shell with a fake status bar/notch;
+// the real app uses the OS status bar + safe-area, so these scaffold the inner
+// content only. 24px gutter is the dominant design inset.
+// ---------------------------------------------------------------------------
+
+/**
+ * Screen scaffold. Owns background, safe-area top inset, and the 24px gutter in
+ * one place so screens stop hand-rolling SafeAreaView+ScrollView with drifting
+ * paddings. `bg` defaults to the page background; pass "card" for auth screens
+ * and "hero" for the full-bleed black screens (App lock / restricted viewer).
+ */
+export function Screen({
+  children,
+  scroll = false,
+  padded = true,
+  gutter = 24,
+  bg = "bg",
+  edges = ["top"],
+  contentStyle,
+  refreshControl,
+}: {
+  children: React.ReactNode;
+  scroll?: boolean;
+  padded?: boolean;
+  gutter?: number;
+  bg?: "bg" | "card" | "hero";
+  edges?: Edge[];
+  contentStyle?: ViewStyle;
+  refreshControl?: React.ComponentProps<typeof ScrollView>["refreshControl"];
+}) {
+  const { palette } = useTheme();
+  const background = bg === "card" ? palette.card : bg === "hero" ? palette.hero : palette.bg;
+  const pad: ViewStyle = padded ? { paddingHorizontal: gutter } : {};
+  if (scroll) {
+    return (
+      <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: background }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
+          contentContainerStyle={[{ paddingTop: 6, paddingBottom: 28 }, pad, contentStyle]}
+        >
+          {children}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+  return (
+    <SafeAreaView edges={edges} style={{ flex: 1, backgroundColor: background }}>
+      <View style={[{ flex: 1, paddingTop: 6 }, pad, contentStyle]}>{children}</View>
+    </SafeAreaView>
+  );
+}
+
+/** Round surface icon-button (header bell, back/sort circles). 44 or 40 px. */
+export function IconButton({
+  icon,
+  onPress,
+  size = 44,
+  shape = "rounded",
+  dot,
+  color,
+  label,
+}: {
+  icon: IconName;
+  onPress?: () => void;
+  size?: number;
+  /** "rounded" = 14-radius square (header bell); "circle" = back/sort circles. */
+  shape?: "rounded" | "circle";
+  dot?: boolean;
+  color?: string;
+  label?: string;
+}) {
+  const { palette, scheme } = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label ?? icon}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: shape === "circle" ? size / 2 : 14,
+        backgroundColor: palette.card,
+        alignItems: "center",
+        justifyContent: "center",
+        shadowColor: palette.shadow,
+        shadowOpacity: 0.06,
+        shadowRadius: 3,
+        shadowOffset: { width: 0, height: 1 },
+        elevation: scheme === "dark" ? 0 : 1,
+      }}
+    >
+      <Icon name={icon} size={Math.round(size * 0.5)} color={color ?? palette.text} />
+      {dot ? (
+        <View
+          style={{
+            position: "absolute",
+            top: size * 0.25,
+            right: size * 0.27,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: palette.danger,
+            borderWidth: 2,
+            borderColor: palette.card,
+          }}
+        />
+      ) : null}
+    </Pressable>
+  );
+}
+
+/**
+ * Strong dark fill panel (design FILL hero cards: "Organize my phone", storage
+ * meters, etc.). White-on-fill inks regardless of theme. Children render over
+ * `palette.primary`; use `onFill`/`onFillMuted` colors for any text inside.
+ */
+export function HeroPanel({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  const { palette } = useTheme();
+  return (
+    <View style={[{ backgroundColor: palette.primary, borderRadius: 20, padding: 18 }, style]}>{children}</View>
+  );
+}
+/** White text on a HeroPanel/FILL surface (stays white in both modes). */
+export const onFill = "#FFFFFF";
+export const onFillMuted = "rgba(255,255,255,0.62)";
+export const onFillFaint = "rgba(255,255,255,0.12)";
+
+/** Thin progress/meter bar on a BORDER track (design by-course/quota bars). */
+export function ProgressBar({
+  pct,
+  height = 8,
+  track,
+  fill,
+}: {
+  pct: number;
+  height?: number;
+  track?: string;
+  fill?: string;
+}) {
+  const { palette } = useTheme();
+  return (
+    <View style={{ height, borderRadius: height / 2, backgroundColor: track ?? palette.border, overflow: "hidden" }}>
+      <View style={{ height, borderRadius: height / 2, width: `${Math.max(0, Math.min(100, pct))}%`, backgroundColor: fill ?? palette.primary }} />
+    </View>
+  );
+}
+
+/** Full-screen dim scrim behind a bottom sheet / centered modal. */
+export function Scrim({ opacity = 0.42, onPress }: { opacity?: number; onPress?: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Dismiss"
+      onPress={onPress}
+      style={{ position: "absolute", inset: 0, backgroundColor: `rgba(20,25,40,${opacity})` }}
+    />
+  );
+}
+
+/** Bottom sheet container with grab handle (design publish/report/takedown sheets). */
+export function Sheet({ children, style }: { children: React.ReactNode; style?: ViewStyle }) {
+  const { palette } = useTheme();
+  return (
+    <View
+      style={[
+        {
+          backgroundColor: palette.card,
+          borderTopLeftRadius: 30,
+          borderTopRightRadius: 30,
+          paddingHorizontal: 24,
+          paddingTop: 12,
+          paddingBottom: 36,
+        },
+        style,
+      ]}
+    >
+      <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: palette.toggleTrack, alignSelf: "center", marginBottom: 18 }} />
+      {children}
+    </View>
+  );
+}
+
+/** Back-chevron circle + screen title (design `settingsHeader`). */
+export function ScreenHeader({ title, onBack, right }: { title: string; onBack?: () => void; right?: React.ReactNode }) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 14, paddingTop: 4 }}>
+      {onBack ? <IconButton icon="back" shape="circle" size={40} onPress={onBack} label="Back" /> : null}
+      <Txt variant="title" style={{ flex: 1 }}>{title}</Txt>
+      {right ?? null}
     </View>
   );
 }

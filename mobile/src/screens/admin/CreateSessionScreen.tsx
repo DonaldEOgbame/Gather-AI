@@ -46,7 +46,7 @@ export default function CreateSessionScreen({ navigation }: RootScreen<"CreateSe
     <View style={{ flex: 1, backgroundColor: "rgba(20,25,40,0.42)", justifyContent: "flex-end" }}>
       <Pressable style={{ flex: 1 }} onPress={() => navigation.goBack()} accessibilityLabel="Dismiss" />
       <View style={{ backgroundColor: palette.card, borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 36 }}>
-        <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: "#D3D7DE", alignSelf: "center", marginBottom: 18 }} />
+        <View style={{ width: 40, height: 5, borderRadius: 3, backgroundColor: palette.toggleTrack, alignSelf: "center", marginBottom: 18 }} />
         <Txt style={{ fontSize: 20, ...font(800), color: palette.text }}>New academic session</Txt>
         <Txt variant="muted" style={{ fontSize: 13, ...font(500), marginTop: 4 }}>Two semesters are created together.</Txt>
 

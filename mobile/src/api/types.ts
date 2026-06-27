@@ -22,6 +22,7 @@ export interface UserOut {
   status: AccountStatus;
   institution_id: string | null;
   matric_or_staff_id: string | null;
+  photo_consent: boolean | null;
   created_at: string;
 }
 
@@ -174,4 +175,18 @@ export interface PendingApprovalOut {
   requested_role: GlobalRole;
   status: string;
   created_at: string;
+}
+
+export interface InstitutionOut {
+  id: string;
+  name: string;
+  join_code: string | null;
+  timezone: string;
+  sharing_ceiling: string;
+  watermark_mandatory: boolean;
+  status: string;
+  retention_months: number;
+  allowed_file_types: string;
+  max_file_size_mb: number;
+  max_files_per_week: number;
 }

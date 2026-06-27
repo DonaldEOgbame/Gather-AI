@@ -8,7 +8,7 @@ import type { RootScreen } from "@/navigation/types";
 
 /** Lecturer · Announcement compose (design 54): one-way course announcement. */
 export default function AnnouncementComposeScreen({ route, navigation }: RootScreen<"AnnouncementCompose">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const offeringId = route.params?.offeringId;
   const code = route.params?.code ?? "Course";
   const [title, setTitle] = useState("");
@@ -41,7 +41,7 @@ export default function AnnouncementComposeScreen({ route, navigation }: RootScr
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 14, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
         <Txt style={{ fontSize: 13.5, ...font(700), color: palette.textMuted }}>{code}</Txt>
 
-        <View style={{ backgroundColor: palette.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginTop: 16, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+        <View style={{ backgroundColor: palette.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 14, marginTop: 16, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
           <TextInput
             value={title}
             onChangeText={setTitle}
@@ -51,7 +51,7 @@ export default function AnnouncementComposeScreen({ route, navigation }: RootScr
           />
         </View>
 
-        <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 16, marginTop: 12, minHeight: 140, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+        <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 16, marginTop: 12, minHeight: 140, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
           <TextInput
             value={body}
             onChangeText={setBody}

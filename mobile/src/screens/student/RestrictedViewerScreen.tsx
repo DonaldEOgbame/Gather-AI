@@ -12,11 +12,19 @@ const BODY = [
   "Memoization caches sub-results to avoid recomputation.",
 ];
 
+// The document "paper" is intentionally white in BOTH modes (it's a rendered
+// page), so text/watermark on it use fixed inks, not theme text (which would go
+// near-white and vanish on white paper in dark mode).
+const PAPER = "#FFFFFF";
+const PAPER_INK = "#14171C";
+const PAPER_MUT = "#5C6470";
+
 function Badge({ icon, label }: { icon: "eye" | "lock"; label: string }) {
+  const { palette } = useTheme();
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: "rgba(255,255,255,0.12)", borderRadius: 999, paddingHorizontal: 11, paddingVertical: 6 }}>
-      <Icon name={icon} size={13} color="#fff" />
-      <Txt style={{ fontSize: 11, ...font(800), color: "#fff" }}>{label}</Txt>
+      <Icon name={icon} size={13} color={palette.heroText} />
+      <Txt style={{ fontSize: 11, ...font(800), color: palette.heroText }}>{label}</Txt>
     </View>
   );
 }
@@ -29,14 +37,14 @@ export default function RestrictedViewerScreen({ route, navigation }: RootScreen
   const code = route.params?.code ?? "CSC101";
   const mark = `${user?.full_name ?? "Ada Lovelace"} · ${user?.matric_or_staff_id ?? "CSC/19/0421"}`;
   return (
-    <View style={{ flex: 1, backgroundColor: palette.primary }}>
+    <View style={{ flex: 1, backgroundColor: palette.hero }}>
       {/* Header */}
       <View style={{ flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 24, paddingTop: 12 }}>
         <Pressable onPress={() => navigation.goBack()} accessibilityLabel="Back" style={{ width: 40, height: 40, borderRadius: 20, backgroundColor: "rgba(255,255,255,0.1)", alignItems: "center", justifyContent: "center" }}>
-          <Icon name="back" size={22} color="#fff" />
+          <Icon name="back" size={22} color={palette.heroText} />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Txt style={{ fontSize: 15, ...font(800), color: "#fff" }}>{title}</Txt>
+          <Txt style={{ fontSize: 15, ...font(800), color: palette.heroText }}>{title}</Txt>
           <Txt style={{ fontSize: 12, ...font(600), color: "rgba(255,255,255,0.55)", marginTop: 1 }}>{code} · page 3 of 24</Txt>
         </View>
         <View style={{ gap: 6, alignItems: "flex-end" }}>
@@ -46,23 +54,23 @@ export default function RestrictedViewerScreen({ route, navigation }: RootScreen
       </View>
 
       {/* Document */}
-      <View style={{ flex: 1, margin: 24, backgroundColor: "#fff", borderRadius: 16, padding: 22, overflow: "hidden" }}>
+      <View style={{ flex: 1, margin: 24, backgroundColor: PAPER, borderRadius: 16, padding: 22, overflow: "hidden" }}>
         {/* Tiled watermark */}
         <View pointerEvents="none" style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center" }}>
           <View style={{ transform: [{ rotate: "-28deg" }], gap: 28 }}>
             {Array.from({ length: 8 }).map((_, r) => (
               <View key={r} style={{ flexDirection: "row", gap: 24, justifyContent: "center" }}>
                 {Array.from({ length: 3 }).map((_, c) => (
-                  <Txt key={c} style={{ fontSize: 12, ...font(800), color: palette.text, opacity: 0.1 }}>{mark}</Txt>
+                  <Txt key={c} style={{ fontSize: 12, ...font(800), color: PAPER_INK, opacity: 0.1 }}>{mark}</Txt>
                 ))}
               </View>
             ))}
           </View>
         </View>
 
-        <Txt style={{ fontSize: 16, ...font(800), color: palette.text }}>Discounting & Recursion</Txt>
+        <Txt style={{ fontSize: 16, ...font(800), color: PAPER_INK }}>Discounting & Recursion</Txt>
         {BODY.map((t, i) => (
-          <Txt key={i} style={{ fontSize: 13, lineHeight: 21, ...font(500), color: palette.textMuted, marginTop: 12 }}>{t}</Txt>
+          <Txt key={i} style={{ fontSize: 13, lineHeight: 21, ...font(500), color: PAPER_MUT, marginTop: 12 }}>{t}</Txt>
         ))}
       </View>
 

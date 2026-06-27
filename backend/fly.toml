@@ -1,0 +1,48 @@
+# Fly.io config for the Gather-AI (UniPortal) FastAPI backend.
+# App name is filled in by `fly launch`/`fly apps create`; HTTPS is forced and
+# the service health check hits /health.
+app = "gather-uniportal-api"
+primary_region = "jnb"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  DATABASE_URL = "sqlite:////data/gather.db"
+  STORAGE_BACKEND = "cloudinary"
+  AI_PROVIDER = "openrouter"
+  AI_MODEL = "openai/gpt-oss-120b"
+  OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+  NOTIFIER_BACKEND = "smtp"
+  SMTP_HOST = "smtp.mailersend.net"
+  SMTP_PORT = "587"
+  SMTP_USE_TLS = "true"
+  PUSH_BACKEND = "fcm"
+  FCM_PROJECT_ID = "gather-f67b1"
+  FCM_CREDENTIALS_FILE = "/data/fcm.json"
+  ACCESS_TOKEN_EXPIRE_MINUTES = "1440"
+  INVITATION_TTL_HOURS = "168"
+  OTP_TTL_MINUTES = "10"
+  REFRESH_TOKEN_EXPIRE_DAYS = "30"
+
+[[mounts]]
+  source = "gather_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

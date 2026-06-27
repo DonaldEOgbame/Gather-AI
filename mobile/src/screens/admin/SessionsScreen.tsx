@@ -2,8 +2,7 @@ import React from "react";
 import { ActivityIndicator, ScrollView, View } from "react-native";
 import { Txt, Button, TinyIcon, StatusPill } from "@/components/ui";
 import { useTheme, font } from "@/theme";
-import { useSessions } from "@/hooks/queries";
-import { useAuth } from "@/stores/auth";
+import { useSessions, useInstitution } from "@/hooks/queries";
 import type { AcademicSessionOut, SemesterOut } from "@/api/types";
 import type { RootScreen } from "@/navigation/types";
 
@@ -24,9 +23,9 @@ function semesterLabel(sem: SemesterOut) {
 
 /** Admin · Sessions (design 77): active session with its two semesters + archive. */
 export default function SessionsScreen({ navigation }: RootScreen<"Sessions">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const { data: sessions, isLoading } = useSessions();
-  const user = useAuth((s) => s.user);
+  const { data: institution } = useInstitution();
 
   const active = sessions?.find((s) => s.status === "active");
   const past = sessions?.filter((s) => s.status === "archived") ?? [];
@@ -36,7 +35,7 @@ export default function SessionsScreen({ navigation }: RootScreen<"Sessions">) {
       <View style={{ paddingHorizontal: 24, paddingTop: 4 }}>
         <Txt variant="title">Sessions</Txt>
         <Txt variant="muted" style={{ fontSize: 14, marginTop: 2 }}>
-          {user?.institution_id ?? "Your institution"}
+          {institution?.name ?? "Your institution"}
         </Txt>
       </View>
 
@@ -58,7 +57,7 @@ export default function SessionsScreen({ navigation }: RootScreen<"Sessions">) {
               <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 20, marginBottom: 8 }}>PAST SESSIONS</Txt>
               <View style={{ gap: 10 }}>
                 {past.map((s) => (
-                  <View key={s.id} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+                  <View key={s.id} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
                     <TinyIcon icon="calendar" accent="lemon" size={40} iconSize={20} />
                     <View style={{ flex: 1 }}>
                       <Txt style={{ fontSize: 14.5, ...font(700), color: palette.textMuted }}>{s.name}</Txt>
@@ -83,10 +82,10 @@ export default function SessionsScreen({ navigation }: RootScreen<"Sessions">) {
 }
 
 function ActiveSessionCard({ session }: { session: AcademicSessionOut }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const sems = session.semesters ?? [];
   return (
-    <View style={{ backgroundColor: palette.card, borderRadius: 18, overflow: "hidden", shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+    <View style={{ backgroundColor: palette.card, borderRadius: 18, overflow: "hidden", shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
       <View style={{ backgroundColor: palette.accents.mint.bg, padding: 16, flexDirection: "row", alignItems: "center", gap: 12 }}>
         <TinyIcon icon="calendar" accent="mint" size={46} iconSize={23} />
         <View style={{ flex: 1 }}>
@@ -104,7 +103,7 @@ function ActiveSessionCard({ session }: { session: AcademicSessionOut }) {
           <SemRow
             key={sem.id}
             top={i > 0}
-            color={isActive ? palette.accents.mint.fg : "#D3D7DE"}
+            color={isActive ? palette.accents.mint.fg : palette.toggleTrack}
             title={name}
             sub={sub}
             pill={isActive ? "Active" : sem.status === "upcoming" ? "Upcoming" : "Archived"}
@@ -121,7 +120,7 @@ function SemRow({ color, title, sub, pill, pillAccent, titleColor, top }: {
   color: string; title: string; sub: string; pill: string;
   pillAccent: "mint" | "lemon"; titleColor: string; top?: boolean;
 }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
     <View style={{ padding: 13, paddingHorizontal: 16, flexDirection: "row", alignItems: "center", gap: 12, borderTopColor: top ? palette.border : "rgba(0,0,0,0.05)", borderTopWidth: 1 }}>
       <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: color }} />

@@ -552,3 +552,33 @@ def list_enrollments(
                 "enrolled_at": e.enrolled_at,
             })
     return out
+
+
+@join_code_router.get("/join-code/{code}", response_model=OfferingOut)
+def resolve_course_join_code(
+    code: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Resolves a course join code to its offering details."""
+    if user.global_role != GlobalRole.student:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Students only")
+
+    jc = (
+        db.query(CourseJoinCode)
+        .filter(CourseJoinCode.code == code.strip().upper())
+        .one_or_none()
+    )
+    if not jc:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Invalid course join code")
+    if jc.expires_at.replace(tzinfo=timezone.utc) < datetime.now(timezone.utc):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Course join code expired")
+    if jc.uses >= jc.max_uses:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Course join code usage limit reached")
+
+    off = db.get(CourseOffering, jc.offering_id)
+    if not off:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Offering not found")
+
+    return _offering_out_for_registration(off, db, user)
+

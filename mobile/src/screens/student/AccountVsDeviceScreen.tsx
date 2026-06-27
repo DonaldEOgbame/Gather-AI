@@ -21,10 +21,11 @@ const DEVICE: [IconName, AccentName, string][] = [
 
 /** Settings · Account vs device split (design 95): what syncs vs what stays local. */
 export default function AccountVsDeviceScreen(_: RootScreen<"AccountVsDevice">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
+        <Txt variant="title" style={{ marginBottom: 18 }}>Settings</Txt>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 8 }}>
           <Icon name="cloud" size={16} color={palette.accents.sky.fg} />
           <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800) }}>ACCOUNT — SYNCS EVERYWHERE</Txt>
@@ -46,9 +47,9 @@ export default function AccountVsDeviceScreen(_: RootScreen<"AccountVsDevice">) 
 }
 
 function Group({ rows, badge, badgeIcon, badgeColor }: { rows: [IconName, AccentName, string][]; badge: string; badgeIcon: IconName; badgeColor: string }) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   return (
-    <View style={{ backgroundColor: palette.card, borderRadius: 18, paddingHorizontal: 16, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+    <View style={{ backgroundColor: palette.card, borderRadius: 18, paddingHorizontal: 16, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
       {rows.map(([icon, accent, label], i) => (
         <View key={label} style={{ flexDirection: "row", alignItems: "center", gap: 13, paddingVertical: 13, borderTopColor: palette.border, borderTopWidth: i ? 1 : 0 }}>
           <TinyIcon icon={icon} accent={accent} size={38} iconSize={19} />

@@ -1,0 +1,12 @@
+.venv
+_storage
+secrets
+.env
+.env.*
+*.db
+__pycache__
+**/__pycache__
+.pytest_cache
+tests
+verify_*.py
+*.pyc

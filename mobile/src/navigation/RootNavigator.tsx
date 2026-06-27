@@ -2,8 +2,11 @@ import React, { useEffect } from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "@/stores/auth";
 import { usePrefs } from "@/stores/prefs";
+import { useTheme } from "@/theme";
 import { useOnboarding } from "@/screens/auth/OnboardingScreen";
 import { biometricUnlock } from "@/services/permissions";
+import * as Notifications from "expo-notifications";
+import { authApi } from "@/api/endpoints";
 
 import type { RootStackParams } from "./types";
 import AuthNavigator from "./AuthNavigator";
@@ -14,8 +17,6 @@ import OfferingDetailScreen from "@/screens/OfferingDetailScreen";
 import ViewerScreen from "@/screens/ViewerScreen";
 import FolderDetailScreen from "@/screens/FolderDetailScreen";
 import NotificationCenterScreen from "@/screens/NotificationCenterScreen";
-import SettingsScreen from "@/screens/SettingsScreen";
-import SemestersScreen from "@/screens/admin/SemestersScreen";
 import DepartmentsScreen from "@/screens/admin/DepartmentsScreen";
 import RosterImportScreen from "@/screens/admin/RosterImportScreen";
 import AssignLecturersScreen from "@/screens/admin/AssignLecturersScreen";
@@ -81,11 +82,39 @@ import NameIdentityScreen from "@/screens/student/NameIdentityScreen";
 import LocalMirrorScreen from "@/screens/student/LocalMirrorScreen";
 import SwitchAccountScreen from "@/screens/student/SwitchAccountScreen";
 import FreeUpSpaceScreen from "@/screens/student/FreeUpSpaceScreen";
+import DevicesScreen from "@/screens/student/DevicesScreen";
+import UserDetailScreen from "@/screens/admin/UserDetailScreen";
+import CourseRosterScreen from "@/screens/lecturer/CourseRosterScreen";
+import OrganizationScreen from "@/screens/student/OrganizationScreen";
+import PrivacyDataScreen from "@/screens/student/PrivacyDataScreen";
+import NotificationPrefsScreen from "@/screens/student/NotificationPrefsScreen";
+import BookmarksScreen from "@/screens/student/BookmarksScreen";
+import OfflineErrorsScreen from "@/screens/student/OfflineErrorsScreen";
+import JoinOutcomesScreen from "@/screens/student/JoinOutcomesScreen";
+import StorageFullScreen from "@/screens/lecturer/StorageFullScreen";
+import ManageCourseScreen from "@/screens/lecturer/ManageCourseScreen";
+import AdminToolsScreen from "@/screens/admin/AdminToolsScreen";
 
 const Stack = createNativeStackNavigator<RootStackParams>();
 
+async function registerPushNotifications() {
+  try {
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== "granted") return;
+    // Native FCM device token (backend push_backend=fcm). Requires google-services.json
+    // in the build; resolves to the raw FCM registration token the backend sends to.
+    const tokenData = await Notifications.getDevicePushTokenAsync().catch(() => null);
+    if (tokenData?.data) {
+      await authApi.setFcmToken(String(tokenData.data));
+    }
+  } catch (e) {
+    console.warn("FCM registration failed:", e);
+  }
+}
+
 export default function RootNavigator() {
   const { phase, unlocked, setUnlocked } = useAuth();
+  const { palette } = useTheme();
   const onboardingDone = useOnboarding((s) => s.done);
   const biometricLock = usePrefs((s) => s.biometricLock);
 
@@ -97,6 +126,13 @@ export default function RootNavigator() {
       setUnlocked(true);
     }
   }, [phase, biometricLock, unlocked, setUnlocked]);
+
+  // FCM Push Token registration (Module 11)
+  useEffect(() => {
+    if (phase === "authed") {
+      registerPushNotifications();
+    }
+  }, [phase]);
 
   if (phase === "anon" || phase === "loading") {
     return <AuthNavigator />;
@@ -116,8 +152,8 @@ export default function RootNavigator() {
   const detailHeader = {
     title: "",
     headerShadowVisible: false,
-    headerTintColor: "#14171C",
-    headerStyle: { backgroundColor: "#F7F8FA" },
+    headerTintColor: palette.text,
+    headerStyle: { backgroundColor: palette.bg },
   } as const;
 
   return (
@@ -127,8 +163,6 @@ export default function RootNavigator() {
       <Stack.Screen name="Viewer" component={ViewerScreen} />
       <Stack.Screen name="FolderDetail" component={FolderDetailScreen} />
       <Stack.Screen name="NotificationCenter" component={NotificationCenterScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="Semesters" component={SemestersScreen} />
       <Stack.Screen name="Departments" component={DepartmentsScreen} />
       <Stack.Screen name="RosterImport" component={RosterImportScreen} />
       <Stack.Screen name="AssignLecturers" component={AssignLecturersScreen} />
@@ -191,6 +225,19 @@ export default function RootNavigator() {
       <Stack.Screen name="LocalMirror" component={LocalMirrorScreen} />
       <Stack.Screen name="SwitchAccount" component={SwitchAccountScreen} />
       <Stack.Screen name="FreeUpSpace" component={FreeUpSpaceScreen} />
+      {/* Design-parity screens (18, 26, 28, 34, 35, 37, 42, 73, 74, 107) */}
+      <Stack.Screen name="Devices" component={DevicesScreen} />
+      <Stack.Screen name="UserDetail" component={UserDetailScreen} />
+      <Stack.Screen name="CourseRoster" component={CourseRosterScreen} />
+      <Stack.Screen name="ManageCourse" component={ManageCourseScreen} />
+      <Stack.Screen name="AdminTools" component={AdminToolsScreen} />
+      <Stack.Screen name="Organization" component={OrganizationScreen} />
+      <Stack.Screen name="PrivacyData" component={PrivacyDataScreen} />
+      <Stack.Screen name="NotificationPrefs" component={NotificationPrefsScreen} />
+      <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
+      <Stack.Screen name="OfflineErrors" component={OfflineErrorsScreen} />
+      <Stack.Screen name="JoinOutcomes" component={JoinOutcomesScreen} />
+      <Stack.Screen name="StorageFull" component={StorageFullScreen} />
       {/* Bottom-sheet style overlays */}
       <Stack.Screen name="PublishSheet" component={PublishSheetScreen} options={{ headerShown: false, presentation: "transparentModal", animation: "fade" }} />
       <Stack.Screen name="PreDownload" component={PreDownloadScreen} options={{ headerShown: false, presentation: "transparentModal", animation: "fade" }} />

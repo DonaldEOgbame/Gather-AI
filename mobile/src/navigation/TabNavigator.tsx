@@ -29,11 +29,11 @@ export default function TabNavigator() {
   const screenOptions = {
     headerShown: false,
     tabBarActiveTintColor: palette.text,
-    tabBarInactiveTintColor: "#AEB4BE",
+    tabBarInactiveTintColor: palette.tabInactive,
     tabBarLabelStyle: { fontSize: 11, ...font(700) },
     tabBarStyle: {
       backgroundColor: palette.card,
-      borderTopColor: "#EDEFF3",
+      borderTopColor: palette.fieldBorder,
       height: 76,
       paddingTop: 10,
       paddingBottom: 22,

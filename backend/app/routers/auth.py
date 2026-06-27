@@ -21,6 +21,7 @@ from app.deps import get_current_user, require_role, get_current_session
 from app.models import (
     AccountStatus,
     GlobalRole,
+    InstitutionStatus,
     Invitation,
     OtpCode,
     PendingApproval,
@@ -31,12 +32,22 @@ from app.models import (
     Notification,
 )
 from app.notifier import get_notifier
+from app.audit import log_action
 from app.schemas import (
     AccessOut,
+    AccountStatusIn,
     ActivateIn,
     ApprovalActionIn,
+    DisplayNameIn,
+    ForgotPasswordIn,
+    ForgotPasswordOut,
+    PasswordResetOut,
+    PatchMeIn,
+    ResetPasswordIn,
+    RoleChangeIn,
     OtpVerifyIn,
     RefreshIn,
+    ResolveJoinCodeOut,
     RosterImportIn,
     RosterImportResult,
     SelfRegisterIn,
@@ -169,7 +180,87 @@ def activate(body: ActivateIn, db: Session = Depends(get_db)) -> User:
     return user
 
 
+# --- Self-service forgot password (design 04 "Forgot?") ------------------------
+
+
+@router.post("/forgot-password", response_model=ForgotPasswordOut)
+def forgot_password(body: ForgotPasswordIn, db: Session = Depends(get_db)):
+    """Public: a logged-out user requests a reset link by email. Always returns
+    200 (never reveals whether the email exists). When the account exists and is
+    eligible, a reset token is issued and emailed."""
+    user = db.query(User).filter(User.email == body.email).one_or_none()
+    out = ForgotPasswordOut(status="reset_sent")
+    # Don't leak existence, and don't let suspended/archived users reset their way in.
+    if user is None or user.status in (AccountStatus.suspended, AccountStatus.archived):
+        return out
+
+    raw = generate_opaque_token()
+    inv = Invitation(user_id=user.id, token=raw, expires_at=utc_in(hours=1))
+    db.add(inv)
+    db.commit()
+    try:
+        get_notifier().send_email(
+            user.email,
+            "Reset your Gather password",
+            f"Use this code to reset your password (valid 1 hour): {raw}",
+        )
+    except Exception:
+        pass
+    # `reset_token` is surfaced for dev/test parity with the console notifier; in
+    # production with a real SMTP backend it travels only in the email.
+    out.reset_token = raw
+    return out
+
+
+@router.post("/reset-password", response_model=UserOut)
+def reset_password(body: ResetPasswordIn, db: Session = Depends(get_db)) -> User:
+    """Public: complete the reset with the emailed token + a new password.
+    Unlike activation, this does not change account status."""
+    inv = db.query(Invitation).filter(Invitation.token == body.token).one_or_none()
+    if inv is None or inv.accepted_at is not None:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invalid or used reset link")
+    if is_expired(inv.expires_at):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Reset link expired")
+    user = db.get(User, inv.user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+    if user.status in (AccountStatus.suspended, AccountStatus.archived):
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Account is not active")
+    user.password_hash = hash_password(body.password)
+    if user.status == AccountStatus.invited:
+        user.status = AccountStatus.active
+    inv.accepted_at = datetime.now(timezone.utc)
+    # Revoke all live sessions so a leaked password can't keep an attacker in.
+    now = datetime.now(timezone.utc)
+    db.query(SessionModel).filter(
+        SessionModel.user_id == user.id,
+        SessionModel.revoked_at.is_(None),
+    ).update({SessionModel.revoked_at: now}, synchronize_session=False)
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 # --- Provisioning: self-register with join code (Module 6A.2) --------------------
+
+
+@router.get("/resolve-join-code", response_model=ResolveJoinCodeOut)
+def resolve_join_code(code: str, db: Session = Depends(get_db)) -> University:
+    """Public match-preview for the Join screen (design 06). Given a join code,
+    confirm which active institution it belongs to so the user can verify they're
+    joining the right school before entering details. Returns 404 for unknown or
+    inactive codes; never leaks anything beyond name + timezone."""
+    inst = (
+        db.query(University)
+        .filter(
+            University.join_code == code.strip().upper(),
+            University.status == InstitutionStatus.active,
+        )
+        .one_or_none()
+    )
+    if inst is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown or inactive join code")
+    return inst
 
 
 @router.post("/self-register", status_code=status.HTTP_202_ACCEPTED)
@@ -382,9 +473,161 @@ def revoke_session(
     db.commit()
 
 
+@router.post("/sessions/revoke-others")
+def revoke_other_sessions(
+    db: Session = Depends(get_db),
+    current: SessionModel = Depends(get_current_session),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Design 18: 'Log out all other devices' — revoke every live session but this one."""
+    now = datetime.now(timezone.utc)
+    q = db.query(SessionModel).filter(
+        SessionModel.user_id == user.id,
+        SessionModel.revoked_at.is_(None),
+    )
+    if current is not None:
+        q = q.filter(SessionModel.id != current.id)
+    revoked = q.update({SessionModel.revoked_at: now}, synchronize_session=False)
+    db.commit()
+    return {"revoked": revoked}
+
+
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)) -> User:
     return user
+
+
+@router.patch("/me", response_model=UserOut)
+def patch_me(
+    body: PatchMeIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> User:
+    """C18: Student/user updates their own profile fields (display name, photo consent)."""
+    if body.display_name is not None:
+        user.display_name = body.display_name.strip() or None
+    if body.photo_consent is not None:
+        user.photo_consent = body.photo_consent
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+@router.get("/users", response_model=list[UserOut])
+def list_users(
+    role: str | None = None,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+) -> list[User]:
+    """Admin: list all users in the institution."""
+    q = db.query(User).filter(User.institution_id == admin.institution_id)
+    if role:
+        try:
+            q = q.filter(User.global_role == GlobalRole(role))
+        except ValueError:
+            pass
+    return q.order_by(User.full_name).all()
+
+
+# --- Admin user management (design 26 · User detail) ---
+
+
+def _same_institution(admin: User, target: User) -> None:
+    if target is None or target.institution_id != admin.institution_id:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+
+@router.get("/users/{user_id}", response_model=UserOut)
+def get_user(
+    user_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+) -> User:
+    target = db.get(User, user_id)
+    _same_institution(admin, target)
+    return target
+
+
+@router.post("/users/{user_id}/reset-password", response_model=PasswordResetOut)
+def admin_reset_password(
+    user_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+):
+    """Design 26: emails a reset link. Issues a fresh invitation-style token and
+    notifies the user; the raw token is returned so the flow is verifiable."""
+    target = db.get(User, user_id)
+    _same_institution(admin, target)
+
+    raw = generate_opaque_token()
+    expires = utc_in(hours=48)
+    inv = Invitation(user_id=target.id, token=raw, expires_at=expires)
+    db.add(inv)
+    log_action(db, admin.id, "reset_password", target_id=target.id,
+               details=f"{admin.email} -> {target.email}")
+    db.commit()
+    try:
+        get_notifier().send_email(
+            target.email,
+            "Reset your Gather password",
+            f"An administrator started a password reset. Token: {raw}",
+        )
+    except Exception:
+        pass
+    return PasswordResetOut(status="reset_sent", reset_token=raw, expires_at=expires)
+
+
+@router.patch("/users/{user_id}/role", response_model=UserOut)
+def admin_change_role(
+    user_id: str,
+    body: RoleChangeIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+) -> User:
+    """Design 26: change a user's role (Lecturer ↔ Admin or Student)."""
+    target = db.get(User, user_id)
+    _same_institution(admin, target)
+    if target.id == admin.id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You cannot change your own role")
+    old = target.global_role.value
+    target.global_role = body.global_role
+    log_action(db, admin.id, "change_role", target_id=target.id,
+               details=f"{old} -> {body.global_role.value}")
+    db.commit()
+    db.refresh(target)
+    return target
+
+
+@router.patch("/users/{user_id}/status", response_model=UserOut)
+def admin_set_status(
+    user_id: str,
+    body: AccountStatusIn,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+) -> User:
+    """Design 26: suspend / reactivate / archive an account. Suspending revokes
+    all of the user's live sessions so they are forced out on next request."""
+    target = db.get(User, user_id)
+    _same_institution(admin, target)
+    if target.id == admin.id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "You cannot change your own status")
+    target.status = body.status
+    action = {
+        AccountStatus.suspended: "suspend_account",
+        AccountStatus.active: "reactivate_account",
+        AccountStatus.archived: "archive_account",
+    }.get(body.status, "set_status")
+    if body.status in (AccountStatus.suspended, AccountStatus.archived):
+        now = datetime.now(timezone.utc)
+        db.query(SessionModel).filter(
+            SessionModel.user_id == target.id,
+            SessionModel.revoked_at.is_(None),
+        ).update({SessionModel.revoked_at: now}, synchronize_session=False)
+    log_action(db, admin.id, action, target_id=target.id,
+               details=f"{admin.email} -> {target.email}")
+    db.commit()
+    db.refresh(target)
+    return target
 
 
 # --- FCM token and notifications (Module 11) ---

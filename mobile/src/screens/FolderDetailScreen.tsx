@@ -25,7 +25,7 @@ import type { RootScreen } from "@/navigation/types";
 /** Folder contents (Module 9-E · design 11). Smart-folder affordances + file actions. */
 export default function FolderDetailScreen({ route }: RootScreen<"FolderDetail">) {
   const { folderId, name, isCollection } = route.params;
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const nav = useNavigation<any>();
   const [items, setItems] = useState<PlacementRow[]>([]);
   const [keywords, setKeywords] = useState<string | null>(null);
@@ -132,7 +132,7 @@ export default function FolderDetailScreen({ route }: RootScreen<"FolderDetail">
               key={item.id}
               onPress={() => nav.navigate("Viewer", { placementId: item.id, title: item.display_name, sha256: item.sha256 })}
               onLongPress={() => nav.navigate("FileActions", { title: item.display_name, meta: `was: ${item.original_name}` })}
-              style={({ pressed }) => ({ backgroundColor: palette.card, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 13, opacity: pressed ? 0.85 : 1, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 })}
+              style={({ pressed }) => ({ backgroundColor: palette.card, borderRadius: 18, padding: 14, flexDirection: "row", alignItems: "center", gap: 13, opacity: pressed ? 0.85 : 1, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 })}
             >
               <TinyIcon icon="file" accent={accentFor(item.id)} size={44} iconSize={22} />
               <View style={{ flex: 1, minWidth: 0 }}>

@@ -2,9 +2,16 @@ import os
 import tempfile
 
 # Set env BEFORE any app import so Settings() picks it up at module load.
-os.environ.setdefault("JWT_SECRET", "a-sufficiently-long-test-secret-key-0123456789")
-os.environ.setdefault("STORAGE_BACKEND", "local")
-os.environ.setdefault("LOCAL_STORAGE_DIR", tempfile.mkdtemp())
+# Force the deterministic local providers so the suite never touches the real
+# Cloudinary/OpenRouter/SMTP backends a populated .env selects — tests stay
+# offline, free, and deterministic. (os.environ wins over .env in pydantic.)
+os.environ["JWT_SECRET"] = "a-sufficiently-long-test-secret-key-0123456789"
+os.environ["STORAGE_BACKEND"] = "local"
+os.environ["LOCAL_STORAGE_DIR"] = tempfile.mkdtemp()
+os.environ["AI_PROVIDER"] = "stub"
+os.environ["NOTIFIER_BACKEND"] = "console"
+os.environ["PUSH_BACKEND"] = "console"
+
 
 import pytest
 from fastapi.testclient import TestClient

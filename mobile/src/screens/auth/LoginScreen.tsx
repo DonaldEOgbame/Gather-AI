@@ -12,7 +12,7 @@ import { useAuth } from "@/stores/auth";
 import type { AuthScreen } from "@/navigation/types";
 
 export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const afterLogin = useAuth((s) => s.afterLogin);
   const [id, setId] = useState("");
   const [pw, setPw] = useState("");
@@ -37,7 +37,7 @@ export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.card }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 30, paddingTop: 6 }} keyboardShouldPersistTaps="handled">
           {/* Ink logo tile */}
@@ -50,14 +50,14 @@ export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
               alignItems: "center",
               justifyContent: "center",
               marginTop: 22,
-              shadowColor: "#141928",
+              shadowColor: palette.shadow,
               shadowOpacity: 0.45,
               shadowRadius: 28,
               shadowOffset: { width: 0, height: 12 },
-              elevation: 6,
+              elevation: scheme === "dark" ? 0 : 6,
             }}
           >
-            <Icon name="logo" size={30} color="#fff" width={1.7} />
+            <Icon name="logo" size={30} color={palette.primaryText} width={1.7} />
           </View>
 
           <Txt variant="display" style={{ marginTop: 24 }}>
@@ -85,7 +85,7 @@ export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
           <View style={{ marginTop: 2 }}>
             <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 8 }}>
               <Txt variant="label">Password</Txt>
-              <Pressable accessibilityRole="button" onPress={() => {}}>
+              <Pressable accessibilityRole="button" onPress={() => navigation.navigate("ForgotPassword")}>
                 <Txt style={{ fontSize: 13, color: palette.accents.sky.fg, ...font(700) }}>Forgot?</Txt>
               </Pressable>
             </View>
@@ -102,7 +102,7 @@ export default function LoginScreen({ navigation }: AuthScreen<"Login">) {
             />
           </View>
 
-          <Button title="Sign in" onPress={onLogin} loading={loading} disabled={!id || !pw} style={{ marginTop: 16 }} />
+          <Button title="Sign in" onPress={onLogin} loading={loading} disabled={!id || !pw} style={{ marginTop: 24 }} />
 
           {/* Divider */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginVertical: 24 }}>

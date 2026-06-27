@@ -3,6 +3,8 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 export type AuthStackParams = {
   Login: undefined;
   Activate: { token?: string } | undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token?: string } | undefined;
   JoinCode: undefined;
   Otp: { email: string };
   Onboarding: undefined;
@@ -18,11 +20,8 @@ export type RootStackParams = {
   Viewer: { placementId?: string; materialId?: string; title: string; sha256?: string };
   FolderDetail: { folderId: string; name: string; isCollection?: boolean };
   NotificationCenter: undefined;
-  Settings: undefined;
   PastSemesters: undefined;
-  RegistrationPortal: undefined;
-  // Admin · institution setup (design 43–48)
-  Semesters: undefined;
+  // Admin · institution setup (design 44–48)
   Departments: undefined;
   RosterImport: undefined;
   AssignLecturers: { offeringId?: string; code?: string; title?: string } | undefined;
@@ -46,12 +45,12 @@ export type RootStackParams = {
   VersionRollback: { code?: string; fileName?: string } | undefined;
   ReadyToday: undefined;
   Versions: { code?: string; fileName?: string } | undefined;
-  PreDownload: { title?: string } | undefined;
+  PreDownload: { title?: string; material?: any; offering?: any } | undefined;
   StorageSync: undefined;
   JoinCourse: undefined;
   // Batch 4 · student data, sync, backup & collections (design 61–72)
   AnnouncementsFeed: { offeringId?: string; code?: string } | undefined;
-  ReportIssue: { title?: string; code?: string } | undefined;
+  ReportIssue: { title?: string; code?: string; materialId?: string } | undefined;
   RestrictedViewer: { title?: string; code?: string } | undefined;
   Schedule: undefined;
   DataCost: { title?: string } | undefined;
@@ -62,7 +61,7 @@ export type RootStackParams = {
   Collections: undefined;
   LiteMode: undefined;
   // Batch 5 · workflow sheets + registration & semester transition (design 27,29,36,38,83-87,99)
-  ShareToGather: undefined;
+  ShareToGather: { name?: string; size?: number; uri?: string; from?: string } | undefined;
   SmartCluster: { folderId?: string; name?: string } | undefined;
   ImportFiles: undefined;
   FileActions: { title?: string; meta?: string } | undefined;
@@ -79,14 +78,14 @@ export type RootStackParams = {
   Rollover: undefined;
   TenantQueue: undefined;
   // Batch 6 · safety, identity & ops (design 89-104, 106)
-  Takedown: { title?: string; meta?: string } | undefined;
+  Takedown: { title?: string; meta?: string; materialId?: string } | undefined;
   PhotoConsent: undefined;
   ReviewPhotos: undefined;
   LogoutOptions: undefined;
   PreviewAsStudent: { offeringId?: string; code?: string } | undefined;
   AccountVsDevice: undefined;
   NameIdentity: undefined;
-  ImportResults: undefined;
+  ImportResults: { imported?: number; failed?: { row: string; reason: string }[] } | undefined;
   LocalMirror: undefined;
   SwitchAccount: undefined;
   Handover: { lecturerId?: string } | undefined;
@@ -94,6 +93,19 @@ export type RootStackParams = {
   ViewAsStudent: { studentId?: string; code?: string } | undefined;
   ChangeRestriction: { fileName?: string; code?: string } | undefined;
   FreeUpSpace: undefined;
+  // Design-parity screens (18, 26, 28, 34, 35, 37, 42, 73, 74, 107)
+  Devices: undefined;
+  UserDetail: { userId: string };
+  CourseRoster: { offeringId: string; code?: string; title?: string };
+  Organization: undefined;
+  PrivacyData: undefined;
+  NotificationPrefs: undefined;
+  Bookmarks: undefined;
+  OfflineErrors: undefined;
+  JoinOutcomes: undefined;
+  StorageFull: { offeringId: string; code?: string; fileName?: string };
+  ManageCourse: { offeringId: string; code?: string; title?: string };
+  AdminTools: undefined;
 };
 
 export type AuthScreen<T extends keyof AuthStackParams> = NativeStackScreenProps<

@@ -12,7 +12,7 @@ import type { RootScreen } from "@/navigation/types";
 
 /** Lecturer · Upload material (design 57): file check + placement before publish. */
 export default function UploadMaterialScreen({ route, navigation }: RootScreen<"UploadMaterial">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const qc = useQueryClient();
   const offeringId = route.params?.offeringId;
   const code = route.params?.code ?? "Course";
@@ -56,7 +56,12 @@ export default function UploadMaterialScreen({ route, navigation }: RootScreen<"
       Alert.alert(publish ? "Published" : "Draft saved", `${file.name} ${publish ? "is live" : "saved as draft"}.`);
       navigation.goBack();
     } catch (e: any) {
-      Alert.alert("Upload failed", e?.message ?? "Check permissions and try again.");
+      if (e?.status === 413) {
+        // Course storage / file-size cap hit — show the dedicated blocked screen.
+        navigation.navigate("StorageFull", { offeringId, code, fileName: file.name });
+      } else {
+        Alert.alert("Upload failed", e?.message ?? "Check permissions and try again.");
+      }
     } finally {
       setBusy(false);
     }
@@ -69,7 +74,7 @@ export default function UploadMaterialScreen({ route, navigation }: RootScreen<"
 
         {file ? (
           <>
-            <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+            <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
               <TinyIcon icon="file" accent="peach" size={44} iconSize={22} />
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Txt numberOfLines={1} style={{ fontSize: 14.5, ...font(800), color: palette.text }}>{file.name}</Txt>
@@ -86,7 +91,7 @@ export default function UploadMaterialScreen({ route, navigation }: RootScreen<"
             </View>
           </>
         ) : (
-          <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 24, alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+          <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 24, alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
             <Icon name="upload" size={36} color={palette.textFaint} />
             <Txt variant="muted" style={{ textAlign: "center" }}>No file selected</Txt>
             <Button title="Choose file" onPress={pickFile} />

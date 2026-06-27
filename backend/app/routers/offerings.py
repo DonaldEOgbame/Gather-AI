@@ -49,6 +49,7 @@ from app.schemas import (
     OfferingIn,
     OfferingLecturerIn,
     OfferingLecturerOut,
+    OfferingLecturerPatchIn,
     OfferingOut,
     OfferingPatchIn,
 )
@@ -480,6 +481,49 @@ def add_offering_lecturer(
     db.refresh(lec)
     log_action(db, user.id, "add_offering_lecturer", offering_id, body.lecturer_id)
     return lec
+
+
+@router.patch(
+    "/{offering_id}/lecturers/{lecturer_id}",
+    response_model=OfferingLecturerOut,
+)
+def update_offering_lecturer(
+    offering_id: str,
+    lecturer_id: str,
+    body: OfferingLecturerPatchIn,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> OfferingLecturer:
+    """Design 28 · Course roster: toggle an existing member's
+    can_publish / can_manage_roster permissions."""
+    off = db.get(CourseOffering, offering_id)
+    if not off:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Offering not found")
+    entry = require_offering_member(offering_id, user, db)
+    if not entry.can_manage_roster:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Missing 'can_manage_roster' permission")
+
+    target = (
+        db.query(OfferingLecturer)
+        .filter(
+            OfferingLecturer.offering_id == offering_id,
+            OfferingLecturer.lecturer_id == lecturer_id,
+        )
+        .one_or_none()
+    )
+    if target is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Lecturer not on this offering")
+
+    data = body.model_dump(exclude_unset=True)
+    if "can_publish" in data:
+        target.can_publish = data["can_publish"]
+    if "can_manage_roster" in data:
+        # An owner always retains roster management; don't let it be revoked here.
+        target.can_manage_roster = data["can_manage_roster"] or target.is_owner
+    db.commit()
+    db.refresh(target)
+    log_action(db, user.id, "update_offering_lecturer", offering_id, lecturer_id)
+    return target
 
 
 @router.delete("/{offering_id}/lecturers/{lecturer_id}")

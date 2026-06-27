@@ -1,9 +1,12 @@
 /**
- * Runtime config. API base points at the FastAPI backend. For Android emulator
- * the host machine is reachable at 10.0.2.2; override via EXPO_PUBLIC_API_URL.
+ * Runtime config. API base points at the FastAPI backend deployed on Fly.io, so
+ * the app works on a physical device without the dev machine running. Override
+ * with EXPO_PUBLIC_API_URL for local development (e.g. http://10.0.2.2:8000 on
+ * the Android emulator, http://localhost:8000 on iOS).
  */
 export const API_BASE_URL =
-  process.env.EXPO_PUBLIC_API_URL ?? "http://10.0.2.2:8000";
+  process.env.EXPO_PUBLIC_API_URL ?? "https://gather-uniportal-api.fly.dev";
+
 
 // Module 8 reality check: this build targets Android enterprise distribution
 // with MANAGE_EXTERNAL_STORAGE, enabling the full recursive Scan & Sort.

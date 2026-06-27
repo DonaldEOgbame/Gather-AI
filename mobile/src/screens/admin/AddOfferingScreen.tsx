@@ -16,7 +16,7 @@ const CLONE_OPTS = [
 
 /** Admin · Add offering + clone (design 79): catalog course → offering with optional clone. */
 export default function AddOfferingScreen({ route, navigation }: RootScreen<"AddOffering">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const qc = useQueryClient();
 
   const { data: courses, isLoading: loadingCourses } = useCourses();
@@ -79,14 +79,15 @@ export default function AddOfferingScreen({ route, navigation }: RootScreen<"Add
 
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 96 }} showsVerticalScrollIndicator={false}>
+        <Txt variant="title" style={{ marginBottom: 12 }}>Add offering</Txt>
         <Txt style={{ fontSize: 13, ...font(700), color: palette.textMuted }}>{semLabel}</Txt>
 
         <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 16, marginBottom: 8 }}>CATALOG COURSE</Txt>
         {displayCourse ? (
           <Pressable
             onPress={() => setSelectedCourse(null)}
-            style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, borderColor: palette.text, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}
+            style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, borderColor: palette.text, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}
           >
             <View style={{ width: 46, height: 46, borderRadius: 13, backgroundColor: palette.accents[accentFor(displayCourse.id)].bg, alignItems: "center", justifyContent: "center" }}>
               <Txt style={{ fontSize: 12, ...font(800), color: palette.accents[accentFor(displayCourse.id)].fg }}>
@@ -109,7 +110,7 @@ export default function AddOfferingScreen({ route, navigation }: RootScreen<"Add
               <Pressable
                 key={c.id}
                 onPress={() => setSelectedCourse(c)}
-                style={{ backgroundColor: palette.card, borderRadius: 14, padding: 13, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}
+                style={{ backgroundColor: palette.card, borderRadius: 14, padding: 13, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}
               >
                 <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: palette.accents[accentFor(c.id)].bg, alignItems: "center", justifyContent: "center" }}>
                   <Txt style={{ fontSize: 11, ...font(800), color: palette.accents[accentFor(c.id)].fg }}>{c.code.slice(0, 3)}</Txt>
@@ -124,7 +125,7 @@ export default function AddOfferingScreen({ route, navigation }: RootScreen<"Add
           </View>
         )}
 
-        <View style={{ marginTop: 18, backgroundColor: palette.card, borderRadius: 16, padding: 14, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+        <View style={{ marginTop: 18, backgroundColor: palette.card, borderRadius: 16, padding: 14, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
           <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 9 }}>
               <Icon name="refresh" size={18} color={palette.accents.lilac.fg} />
@@ -161,9 +162,9 @@ export default function AddOfferingScreen({ route, navigation }: RootScreen<"Add
             <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 16, marginBottom: 8 }}>OPTIONAL — OFF BY DEFAULT</Txt>
             <View style={{ gap: 8 }}>
               {CLONE_OPTS.map((label, i) => (
-                <Pressable key={label} onPress={() => setOpts((o) => o.map((v, j) => j === i ? !v : v))} style={{ backgroundColor: palette.card, borderRadius: 14, padding: 13, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+                <Pressable key={label} onPress={() => setOpts((o) => o.map((v, j) => j === i ? !v : v))} style={{ backgroundColor: palette.card, borderRadius: 14, padding: 13, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
                   <View style={{ width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: opts[i] ? palette.text : palette.border, backgroundColor: opts[i] ? palette.text : "transparent", alignItems: "center", justifyContent: "center" }}>
-                    {opts[i] ? <Icon name="check" size={13} color="#fff" width={2.6} /> : null}
+                    {opts[i] ? <Icon name="check" size={13} color={palette.primaryText} width={2.6} /> : null}
                   </View>
                   <Txt style={{ flex: 1, fontSize: 13, ...font(700), color: palette.text }}>{label}</Txt>
                 </Pressable>

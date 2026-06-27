@@ -111,6 +111,41 @@ def upload_material(
 
     data = file.file.read()
 
+    # Enforce institution upload policy (file type, per-file size, weekly count).
+    univ = db.get(University, user.institution_id) if user.institution_id else None
+    if univ:
+        ext = (file.filename or "").rsplit(".", 1)[-1].upper() if "." in (file.filename or "") else ""
+        allowed = [t.strip().upper() for t in univ.allowed_file_types.split(",") if t.strip()]
+        if allowed and ext not in allowed:
+            raise HTTPException(
+                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                detail=f"File type .{ext} is not allowed. Permitted: {', '.join(allowed)}.",
+            )
+        max_bytes = univ.max_file_size_mb * 1024 * 1024
+        if len(data) > max_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail=f"File exceeds the {univ.max_file_size_mb} MB per-file limit.",
+            )
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc)
+        week_start = now - timedelta(days=now.weekday(), hours=now.hour, minutes=now.minute, seconds=now.second, microseconds=now.microsecond)
+        weekly_count = (
+            db.query(func.count(Material.id))
+            .filter(
+                Material.offering_id == actual_offering_id,
+                Material.uploaded_by == user.id,
+                Material.created_at >= week_start,
+            )
+            .scalar()
+            or 0
+        )
+        if weekly_count >= univ.max_files_per_week:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=f"Weekly upload limit of {univ.max_files_per_week} files reached.",
+            )
+
     # 413 Quota Check: 2 GB per offering
     total_size = (
         db.query(func.sum(Material.size_bytes))
@@ -376,6 +411,60 @@ def publish_batch(
 # C11: Emergency takedown (mark as 'removed' — tombstone for sync protocol)
 # ---------------------------------------------------------------------------
 
+@router.get("/analytics/{offering_id}")
+def get_offering_analytics(
+    offering_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+) -> dict:
+    """Returns aggregate download stats + top materials for the offering."""
+    off = db.get(CourseOffering, offering_id)
+    if not off:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Offering not found")
+    require_offering_member(offering_id, user, db)
+
+    from sqlalchemy import func as sqlfunc
+    materials = (
+        db.query(Material)
+        .filter(Material.offering_id == offering_id, Material.status != MaterialStatus.removed)
+        .all()
+    )
+
+    total_downloads = sum(m.download_count for m in materials)
+    total_files = len(materials)
+
+    enrolled_count = (
+        db.query(func.count(Enrollment.id))
+        .filter(
+            Enrollment.offering_id == offering_id,
+            Enrollment.status == EnrollmentStatus.active,
+        )
+        .scalar()
+        or 0
+    )
+
+    top = sorted(materials, key=lambda m: m.download_count, reverse=True)[:10]
+
+    return {
+        "total_files": total_files,
+        "total_downloads": total_downloads,
+        "total_bytes": sum(m.size_bytes for m in materials),
+        "quota_bytes": 2 * 1024 * 1024 * 1024,  # per-offering cap (see upload guard)
+        "enrolled_students": enrolled_count,
+        "top_materials": [
+            {
+                "id": m.id,
+                "title": m.title,
+                "original_filename": m.original_filename,
+                "download_count": m.download_count,
+                "week": m.week,
+                "status": m.status.value,
+            }
+            for m in top
+        ],
+    }
+
+
 @router.post("/{material_id}/remove", response_model=MaterialOut)
 def remove_material(
     material_id: str,
@@ -408,3 +497,56 @@ def remove_material(
 
     log_action(db, user.id, "remove_material", material.id, body.reason)
     return material
+
+
+@router.get("/{material_id}/summary")
+def get_material_summary(
+    material_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    material = db.get(Material, material_id)
+    if not material or not _can_see(material, user, db):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Material not found")
+
+    import json
+    if material.summary_json:
+        try:
+            return json.loads(material.summary_json)
+        except Exception:
+            pass
+
+    # Read from storage and extract readable text (PDF/DOCX/PPTX → text; else decode)
+    storage = get_storage()
+    if not storage.exists(material.storage_key):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Material file missing from storage")
+
+    from app.extract import extract_text
+
+    fh = storage.open(material.storage_key)
+    try:
+        raw_data = fh.read()
+        source_name = material.original_filename or material.title
+        text_content = extract_text(source_name, raw_data)
+    except Exception:
+        text_content = material.title
+    finally:
+        fh.close()
+
+    if not text_content.strip():
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No extractable text in this file")
+
+    # Generate summary
+    ai = get_ai()
+    summary = ai.summarize(text_content)
+
+    summary_data = {
+        "tldr": summary.tldr,
+        "key_terms": summary.key_terms,
+    }
+
+    # Save back to DB
+    material.summary_json = json.dumps(summary_data)
+    db.commit()
+
+    return summary_data

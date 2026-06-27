@@ -11,7 +11,7 @@ import type { RootScreen } from "@/navigation/types";
 
 /** Student · Register courses (design 83): credit-capped course selection. */
 export default function RegisterCoursesScreen({ navigation }: RootScreen<"RegisterCourses">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const qc = useQueryClient();
   const { data: ctx, isLoading: loadingCtx } = useCurrentContext();
   const { data: offerings, isLoading: loadingOfferings } = useRegistrationOfferings(ctx?.semester.id ?? "");
@@ -103,11 +103,11 @@ export default function RegisterCoursesScreen({ navigation }: RootScreen<"Regist
         {/* Units meter */}
         <View style={{ backgroundColor: palette.primary, borderRadius: 18, padding: 16, marginTop: 16 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "baseline" }}>
-            <Txt style={{ fontSize: 22, ...font(800), color: "#fff" }}>{totalUnits} units</Txt>
+            <Txt style={{ fontSize: 22, ...font(800), color: palette.primaryText }}>{totalUnits} units</Txt>
             <Txt style={{ fontSize: 12.5, ...font(600), color: "rgba(255,255,255,0.6)" }}>cap {cap}</Txt>
           </View>
           <View style={{ height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.16)", marginTop: 11, overflow: "hidden" }}>
-            <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: "#fff" }} />
+            <View style={{ height: 8, borderRadius: 4, width: `${pct}%`, backgroundColor: palette.primaryText }} />
           </View>
           <Txt style={{ fontSize: 11.5, ...font(600), color: "rgba(255,255,255,0.65)", marginTop: 9 }}>
             {Math.max(cap - totalUnits, 0)} units left
@@ -123,7 +123,7 @@ export default function RegisterCoursesScreen({ navigation }: RootScreen<"Regist
             </View>
             <View style={{ gap: 9 }}>
               {selected.map((item) => (
-                <View key={item.id} style={{ backgroundColor: palette.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+                <View key={item.id} style={{ backgroundColor: palette.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
                   <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: palette.accents[accentFor(item.id)].bg, alignItems: "center", justifyContent: "center" }}>
                     <Txt style={{ fontSize: 11, ...font(800), color: palette.accents[accentFor(item.id)].fg }}>{(item.code ?? "").slice(0, 3)}</Txt>
                   </View>
@@ -154,7 +154,7 @@ export default function RegisterCoursesScreen({ navigation }: RootScreen<"Regist
                 <Pressable
                   key={item.id}
                   onPress={() => toggle(item)}
-                  style={{ backgroundColor: palette.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: isSelected ? 2 : 0, borderColor: palette.primary, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}
+                  style={{ backgroundColor: palette.card, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: isSelected ? 2 : 0, borderColor: palette.primary, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}
                 >
                   <View style={{ width: 40, height: 40, borderRadius: 11, backgroundColor: palette.accents[accentFor(item.id)].bg, alignItems: "center", justifyContent: "center" }}>
                     <Txt style={{ fontSize: 11, ...font(800), color: palette.accents[accentFor(item.id)].fg }}>{(item.code ?? "").slice(0, 3)}</Txt>

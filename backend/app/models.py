@@ -119,6 +119,10 @@ class University(Base):
     )
     # Decision 1: post-graduation read/download grace window. 0 = unlimited (used for active students).
     retention_months: Mapped[int] = mapped_column(Integer, nullable=False, default=12)
+    # Upload policy enforced server-side on every material POST.
+    allowed_file_types: Mapped[str] = mapped_column(String, nullable=False, default="PDF,DOCX,PPTX,JPG,PNG")
+    max_file_size_mb: Mapped[int] = mapped_column(Integer, nullable=False, default=50)
+    max_files_per_week: Mapped[int] = mapped_column(Integer, nullable=False, default=20)
 
     academic_sessions: Mapped[list["AcademicSession"]] = relationship(back_populates="university")
     departments: Mapped[list["Department"]] = relationship(back_populates="university")
@@ -154,6 +158,7 @@ class User(Base):
         default=AccountStatus.invited,
         index=True,
     )
+    photo_consent: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 

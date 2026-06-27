@@ -26,6 +26,12 @@ mobile/android/app/build/
 .env
 backend/.env
 
+# Service-account / push credentials — never commit private keys
+backend/secrets/
+*-firebase-adminsdk-*.json
+google-services.json
+mobile/google-services.json
+
 # Local storage blobs
 backend/_storage/
 *.db
@@ -37,3 +43,4 @@ backend/_storage/
 
 # OS
 .DS_Store
+mobile/android/app/gather-release.keystore

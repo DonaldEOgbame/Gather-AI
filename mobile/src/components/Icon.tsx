@@ -9,16 +9,18 @@
  */
 import React from "react";
 import Svg, { Path, Rect, Circle } from "react-native-svg";
+import { useTheme } from "@/theme";
 
 type Prim = string | { t: "rect" | "circle" | "path"; a: Record<string, number | string> };
 
 // Ported verbatim from the design canvas icon dictionary (`P`).
 const P: Record<string, Prim[]> = {
+  // "Gathered stack": a box with two progressively shorter, fainter lines
+  // settling above it (design P.logo — loose sheets gathered into one stack).
   logo: [
-    { t: "rect", a: { x: 4, y: 3, width: 13, height: 17, rx: 2 } },
-    "M8 3v17",
-    "M11 8h3M11 12h3",
-    "M17 6l3 1v13l-3-1",
+    { t: "rect", a: { x: 4, y: 11, width: 16, height: 8, rx: 2 } },
+    { t: "path", a: { d: "M6.5 8.5h11", opacity: 0.8 } },
+    { t: "path", a: { d: "M9 6h6", opacity: 0.55 } },
   ],
   book: [{ t: "rect", a: { x: 4, y: 3, width: 13, height: 17, rx: 2 } }, "M8 3v17"],
   bell: ["M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9", "M13.7 21a2 2 0 0 1-3.4 0"],
@@ -85,6 +87,8 @@ const P: Record<string, Prim[]> = {
   refresh: ["M3 12a9 9 0 0 1 15-6.7L21 8", "M21 3v5h-5", "M21 12a9 9 0 0 1-15 6.7L3 16", "M3 21v-5h5"],
   logout: ["M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4", "M16 17l5-5-5-5", "M21 12H9"],
   megaphone: ["M3 11v2a1 1 0 0 0 1 1h2l5 4V6L6 10H4a1 1 0 0 0-1 1z", "M15 8a5 5 0 0 1 0 8"],
+  // Not in the original canvas dictionary; added for the search clear-affordance.
+  close: ["M6 6l12 12M18 6L6 18"],
 };
 
 export type IconName = keyof typeof P;
@@ -93,13 +97,15 @@ export interface IconProps {
   name: IconName;
   /** Square size in px (design default 22). */
   size?: number;
-  /** Stroke color (design default ink #14171C). */
+  /** Stroke color. Defaults to the theme ink (design default 1.9 width). */
   color?: string;
   /** Stroke width (design default 1.9). */
   width?: number;
 }
 
-export function Icon({ name, size = 22, color = "#14171C", width = 1.9 }: IconProps) {
+export function Icon({ name, size = 22, color, width = 1.9 }: IconProps) {
+  const { palette } = useTheme();
+  const stroke = color ?? palette.text;
   const prims = P[name] ?? [];
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -109,14 +115,14 @@ export function Icon({ name, size = 22, color = "#14171C", width = 1.9 }: IconPr
             <Path
               key={i}
               d={d}
-              stroke={color}
+              stroke={stroke}
               strokeWidth={width}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           );
         }
-        const common = { stroke: color, strokeWidth: width, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+        const common = { stroke: stroke, strokeWidth: width, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
         if (d.t === "rect") return <Rect key={i} {...(d.a as any)} {...common} />;
         if (d.t === "circle") return <Circle key={i} {...(d.a as any)} {...common} />;
         return <Path key={i} {...(d.a as any)} {...common} />;

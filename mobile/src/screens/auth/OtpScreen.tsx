@@ -75,7 +75,7 @@ export default function OtpScreen({ route, navigation }: AuthScreen<"Otp">) {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.card }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
       <View style={{ flex: 1, paddingHorizontal: 30, paddingTop: 6 }}>
         <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: palette.accents.mint.bg, alignItems: "center", justifyContent: "center", marginTop: 22 }}>
           <Icon name="shield" size={28} color={palette.accents.mint.fg} />

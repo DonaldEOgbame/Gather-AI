@@ -10,9 +10,12 @@ storage adapter, courses + materials upload/download (SHA-256 dedup).
   roster import → invitation → activation, self-register-with-join-code (OTP match) +
   pending-approval queue, account status lifecycle (invited→active→suspended→archived),
   refresh-token sessions/devices + remote logout. Email/SMS behind a `Notifier` seam.
-- **Remaining:** Drafts→publish/schedule workflow (Celery beat), the `can_publish`
-  publish gate, FCM push, Android Share-to-App intent → draft, the Module 11
-  notifications system (batched digests, quiet hours), Module 13 audit trail.
+- **Built since:** Drafts→publish/schedule workflow (Celery beat task
+  `check_scheduled_releases`), the `can_publish` publish gate, the Module 11
+  notifications system (batched digests, quiet hours, FCM token registration),
+  Module 13 audit trail. All covered by tests.
+- **Remaining:** real FCM push *delivery* (token registration done; `send_push`
+  is log-only pending FCM creds), Android Share-to-App intent → draft.
 **Exit:** the full Module 2 + Module 5 daily flow works end-to-end.
 
 ## Phase 2 — Offline mirror (flagship)
@@ -82,6 +85,14 @@ DELETE /auth/sessions/{id}             remote logout
 GET    /auth/me                        current user
 ```
 
-Verification: `cd backend && pytest` — **8 tests pass** (identity flows + materials RBAC).
-The Alembic chain is a single linear head (0001→0002); a live Postgres apply was not run
-in this environment (Docker daemon was down) but the migration uses only standard ops.
+Verification: `cd backend && pytest` — **36 tests pass** (identity, materials RBAC,
+publishing workflow, notifications, audit, provider backends, registration). The test
+suite forces the deterministic stub/local/console providers via `conftest.py`, so it
+never touches the live Cloudinary/OpenRouter/SMTP backends a populated `.env` selects.
+
+Migrations: the old 0001→0003 chain drifted far behind the models and no longer applied,
+so it was squashed (2026-06-27) into a single `0001_baseline` that builds the schema
+from `Base.metadata` (same source as `bootstrap_db.py`) — dialect-correct and drift-proof
+by construction. `alembic upgrade head` builds all 26 tables clean. Existing create_all
+DBs join the chain with `alembic stamp head`. Providers (storage/AI/notifier) now have
+live backends selectable via `.env`; see the [[gather-provider-backends]] memory.

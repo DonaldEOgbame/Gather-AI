@@ -36,7 +36,7 @@ export default function ActivateScreen({ route, navigation }: AuthScreen<"Activa
 
   if (done) {
     return (
-      <SafeAreaView style={{ flex: 1, backgroundColor: palette.card }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
         <View style={{ flex: 1, paddingHorizontal: 30, justifyContent: "center" }}>
           <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: palette.accents.mint.bg, alignItems: "center", justifyContent: "center" }}>
             <Icon name="check" size={30} color={palette.accents.mint.fg} />
@@ -52,7 +52,7 @@ export default function ActivateScreen({ route, navigation }: AuthScreen<"Activa
   }
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: palette.card }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: palette.bg }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, paddingHorizontal: 30, paddingTop: 6 }} keyboardShouldPersistTaps="handled">
           <View style={{ width: 60, height: 60, borderRadius: 18, backgroundColor: palette.accents.sky.bg, alignItems: "center", justifyContent: "center", marginTop: 22 }}>

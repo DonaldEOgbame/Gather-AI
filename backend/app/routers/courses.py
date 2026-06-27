@@ -73,6 +73,9 @@ def create_institution(
         "watermark_mandatory": inst.watermark_mandatory,
         "status": inst.status,
         "retention_months": inst.retention_months,
+        "allowed_file_types": inst.allowed_file_types,
+        "max_file_size_mb": inst.max_file_size_mb,
+        "max_files_per_week": inst.max_files_per_week,
     }
 
 
@@ -136,6 +139,9 @@ def provision_institution(
         "watermark_mandatory": inst.watermark_mandatory,
         "status": inst.status,
         "retention_months": inst.retention_months,
+        "allowed_file_types": inst.allowed_file_types,
+        "max_file_size_mb": inst.max_file_size_mb,
+        "max_files_per_week": inst.max_files_per_week,
     }
 
 
@@ -155,6 +161,9 @@ def list_institutions(
             "watermark_mandatory": i.watermark_mandatory,
             "status": i.status,
             "retention_months": i.retention_months,
+            "allowed_file_types": i.allowed_file_types,
+            "max_file_size_mb": i.max_file_size_mb,
+            "max_files_per_week": i.max_files_per_week,
         }
         for i in insts
     ]
@@ -179,6 +188,9 @@ def get_my_institution(
         "watermark_mandatory": inst.watermark_mandatory,
         "status": inst.status,
         "retention_months": inst.retention_months,
+        "allowed_file_types": inst.allowed_file_types,
+        "max_file_size_mb": inst.max_file_size_mb,
+        "max_files_per_week": inst.max_files_per_week,
     }
 
 
@@ -206,6 +218,12 @@ def patch_my_institution(
         inst.watermark_mandatory = body.watermark_mandatory
     if body.retention_months is not None:
         inst.retention_months = body.retention_months
+    if body.allowed_file_types is not None:
+        inst.allowed_file_types = body.allowed_file_types
+    if body.max_file_size_mb is not None:
+        inst.max_file_size_mb = body.max_file_size_mb
+    if body.max_files_per_week is not None:
+        inst.max_files_per_week = body.max_files_per_week
 
     db.commit()
     db.refresh(inst)
@@ -219,6 +237,9 @@ def patch_my_institution(
         "watermark_mandatory": inst.watermark_mandatory,
         "status": inst.status,
         "retention_months": inst.retention_months,
+        "allowed_file_types": inst.allowed_file_types,
+        "max_file_size_mb": inst.max_file_size_mb,
+        "max_files_per_week": inst.max_files_per_week,
     }
 
 
@@ -454,6 +475,58 @@ def list_courses(
             ]
             q = q.filter(Course.department_id.in_(dept_ids))
     return q.all()
+
+
+@router.get("/storage-stats")
+def get_storage_stats(
+    db: Session = Depends(get_db),
+    user: User = Depends(require_role(GlobalRole.admin, GlobalRole.superadmin)),
+) -> dict:
+    """Admin: institution-wide storage usage aggregated by department."""
+    from app.models import CourseOffering, Material
+    from sqlalchemy import func as sqlfunc
+
+    if not user.institution_id:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "No institution linked")
+
+    dept_ids = [
+        d.id
+        for d in db.query(Department)
+        .filter(Department.university_id == user.institution_id)
+        .all()
+    ]
+
+    total_bytes = (
+        db.query(sqlfunc.sum(Material.size_bytes))
+        .join(CourseOffering, Material.offering_id == CourseOffering.id)
+        .join(Course, CourseOffering.course_id == Course.id)
+        .filter(Course.department_id.in_(dept_ids))
+        .scalar()
+        or 0
+    )
+
+    by_dept = []
+    for dept in db.query(Department).filter(Department.id.in_(dept_ids)).all():
+        dept_course_ids = [c.id for c in db.query(Course).filter(Course.department_id == dept.id).all()]
+        dept_offering_ids = [
+            o.id for o in db.query(CourseOffering).filter(CourseOffering.course_id.in_(dept_course_ids)).all()
+        ]
+        dept_bytes = (
+            db.query(sqlfunc.sum(Material.size_bytes))
+            .filter(Material.offering_id.in_(dept_offering_ids))
+            .scalar()
+            or 0
+        )
+        by_dept.append({
+            "department_id": dept.id,
+            "department_name": dept.name,
+            "bytes_used": dept_bytes,
+        })
+
+    return {
+        "total_bytes": total_bytes,
+        "by_department": by_dept,
+    }
 
 
 @router.get("/{course_id}", response_model=CourseOut)

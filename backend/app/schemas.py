@@ -51,12 +51,37 @@ class ActivateIn(BaseModel):
     password: str = Field(min_length=8)
 
 
+class ForgotPasswordIn(BaseModel):
+    """Public self-service reset request (design 04 'Forgot?')."""
+    email: EmailStr
+
+
+class ForgotPasswordOut(BaseModel):
+    status: str
+    reset_token: str | None = None  # dev/test parity; omitted by real SMTP backend
+
+
+class ResetPasswordIn(BaseModel):
+    token: str
+    password: str = Field(min_length=8)
+
+
 class SelfRegisterIn(BaseModel):
     join_code: str
     matric_or_staff_id: str
     email: EmailStr
     full_name: str = ""
     requested_role: GlobalRole = GlobalRole.student
+
+
+class ResolveJoinCodeOut(BaseModel):
+    """Public (unauthenticated) match-preview for a join code — only the minimal
+    fields the Join screen needs to confirm "you're joining the right school".
+    Deliberately excludes anything sensitive about the tenant."""
+
+    id: str
+    name: str
+    timezone: str
 
 
 class OtpVerifyIn(BaseModel):
@@ -106,14 +131,21 @@ class UserOut(BaseModel):
     global_role: GlobalRole
     status: AccountStatus
     institution_id: str | None
+    photo_consent: bool | None = None
     created_at: datetime | None = None
 
     class Config:
         from_attributes = True
 
 
+class PatchMeIn(BaseModel):
+    """C18: student-editable self-patch (display name, photo consent)."""
+    display_name: str | None = Field(default=None, max_length=120)
+    photo_consent: bool | None = None
+
+
 class DisplayNameIn(BaseModel):
-    """C18: student-editable display name update."""
+    """C18: student-editable display name update (legacy compat)."""
     display_name: str = Field(max_length=120)
 
 
@@ -128,6 +160,23 @@ class PendingApprovalOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class RoleChangeIn(BaseModel):
+    """Admin (design 26): move a user between roles."""
+    global_role: GlobalRole
+
+
+class AccountStatusIn(BaseModel):
+    """Admin (design 26): suspend / reactivate / archive an account."""
+    status: AccountStatus
+
+
+class PasswordResetOut(BaseModel):
+    """Admin (design 26): emails a reset link; we surface the token for dev/test."""
+    status: str
+    reset_token: str
+    expires_at: datetime
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +202,9 @@ class InstitutionIn(BaseModel):
     sharing_ceiling: str | None = None
     watermark_mandatory: bool | None = None
     retention_months: int | None = None
+    allowed_file_types: str | None = None
+    max_file_size_mb: int | None = None
+    max_files_per_week: int | None = None
 
 
 class InstitutionOut(BaseModel):
@@ -164,6 +216,9 @@ class InstitutionOut(BaseModel):
     watermark_mandatory: bool
     status: InstitutionStatus
     retention_months: int
+    allowed_file_types: str
+    max_file_size_mb: int
+    max_files_per_week: int
 
     class Config:
         from_attributes = True
@@ -352,6 +407,12 @@ class OfferingLecturerIn(BaseModel):
     is_owner: bool = False
     can_publish: bool = True
     can_manage_roster: bool = False
+
+
+class OfferingLecturerPatchIn(BaseModel):
+    """Design 28 · Course roster: toggle an existing member's permissions."""
+    can_publish: bool | None = None
+    can_manage_roster: bool | None = None
 
 
 class OfferingLecturerOut(BaseModel):

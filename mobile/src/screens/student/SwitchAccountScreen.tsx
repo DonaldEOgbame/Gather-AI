@@ -3,11 +3,18 @@ import { Alert, Pressable, ScrollView, View } from "react-native";
 import { Txt, Avatar, StatusPill, InfoCard } from "@/components/ui";
 import { Icon } from "@/components/Icon";
 import { useTheme, font } from "@/theme";
+import { useAuth } from "@/stores/auth";
+import { useInstitution } from "@/hooks/queries";
 import type { RootScreen } from "@/navigation/types";
 
 /** Settings · Account switcher (design 100): per-account encrypted sandboxes. */
 export default function SwitchAccountScreen(_: RootScreen<"SwitchAccount">) {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
+  const user = useAuth((s) => s.user);
+  const { data: institution } = useInstitution();
+  const activeName = user?.full_name ?? "You";
+  const roleLabel = user ? user.global_role.charAt(0).toUpperCase() + user.global_role.slice(1) : "Student";
+  const activeSub = `${institution?.name ?? "Institution"} · ${roleLabel}`;
   return (
     <View style={{ flex: 1, backgroundColor: palette.bg }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 8, paddingBottom: 24 }} showsVerticalScrollIndicator={false}>
@@ -15,16 +22,16 @@ export default function SwitchAccountScreen(_: RootScreen<"SwitchAccount">) {
 
         <Txt variant="faint" style={{ letterSpacing: 0.5, ...font(800), marginTop: 18, marginBottom: 8 }}>ON THIS PHONE</Txt>
         <View style={{ gap: 10 }}>
-          <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, borderColor: palette.text, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
-            <Avatar name="Ada Lovelace" size={44} />
+          <View style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1.5, borderColor: palette.text, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
+            <Avatar name={activeName} size={44} />
             <View style={{ flex: 1 }}>
-              <Txt style={{ fontSize: 14.5, ...font(800), color: palette.text }}>Ada Lovelace</Txt>
-              <Txt variant="faint" style={{ fontSize: 12, ...font(600), marginTop: 2 }}>Lagos State University · Student</Txt>
+              <Txt style={{ fontSize: 14.5, ...font(800), color: palette.text }}>{activeName}</Txt>
+              <Txt variant="faint" style={{ fontSize: 12, ...font(600), marginTop: 2 }}>{activeSub}</Txt>
             </View>
             <StatusPill label="Active" accent="mint" />
           </View>
 
-          <Pressable onPress={() => Alert.alert("Switch account", "Unlock Tunde Bello’s sandbox? Ada’s files will be locked.")} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+          <Pressable onPress={() => Alert.alert("Switch account", "Unlock Tunde Bello’s sandbox? Ada’s files will be locked.")} style={{ backgroundColor: palette.card, borderRadius: 16, padding: 14, flexDirection: "row", alignItems: "center", gap: 12, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
             <Avatar name="Tunde Bello" size={44} />
             <View style={{ flex: 1 }}>
               <Txt style={{ fontSize: 14.5, ...font(700), color: palette.text }}>Tunde Bello</Txt>

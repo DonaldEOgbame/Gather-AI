@@ -12,7 +12,7 @@ import { useNavigation } from "@react-navigation/native";
  * offline) vs Course Catalog (server). Local matches display_name, topic, name.
  */
 export default function SearchTab() {
-  const { palette } = useTheme();
+  const { palette, scheme } = useTheme();
   const nav = useNavigation<any>();
   const [scope, setScope] = useState<"library" | "catalog">("library");
   const [q, setQ] = useState("");
@@ -36,7 +36,7 @@ export default function SearchTab() {
         </View>
 
         {/* Search bar */}
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: palette.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 4, marginTop: 14, shadowColor: "#141928", shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: palette.card, borderRadius: 16, paddingHorizontal: 16, paddingVertical: 4, marginTop: 14, shadowColor: palette.shadow, shadowOpacity: 0.05, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: scheme === "dark" ? 0 : 1 }}>
           <Icon name="search" size={20} color={palette.textFaint} />
           <TextInput
             value={q}

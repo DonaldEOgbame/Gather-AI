@@ -7,6 +7,8 @@ import {
   UNSORTED_FOLDER_ID,
 } from "./schema";
 
+export { UNSORTED_FOLDER_ID, BOOKMARKS_FOLDER_ID };
+
 let _db: SQLite.SQLiteDatabase | null = null;
 
 export async function getDb(): Promise<SQLite.SQLiteDatabase> {
